@@ -25,8 +25,7 @@ export default function CityWeather() {
         .from("markets")
         .select("*")
         .ilike("question", searchString)
-        .eq("category", "Politics") // DB constraint forces Politics, we will filter by regex to ensure it's weather
-        .eq("status", "Active");
+        .eq("category", "Politics");
         
       if (ms && ms.length > 0) {
         // Parse the questions to extract date and threshold
@@ -53,9 +52,11 @@ export default function CityWeather() {
             noMultiplier: (1 / no).toFixed(2),
             totalVolume: total,
             image_url: m.image_url,
-            end_date: m.end_date
+            end_date: m.end_date,
+            status: m.status,
+            winning_outcome: m.winning_outcome
           };
-        }).filter(m => m !== null && new Date(m.end_date) > new Date());
+        }).filter(m => m !== null);
         
         setMarkets(parsedMarkets);
         
@@ -199,8 +200,7 @@ export default function CityWeather() {
               return (
                 <div 
                   key={market.id} 
-                  onClick={() => setSelectedMarket(market)}
-                  className={`flex justify-between items-center p-4 border-b border-[#2a2e33]/50 cursor-pointer transition-colors ${selectedMarket?.id === market.id ? 'bg-[#1a1d24]' : 'hover:bg-[#16181d]'}`}
+                  className={`flex justify-between items-center p-4 border-b border-[#2a2e33]/50 transition-colors ${selectedMarket?.id === market.id ? 'bg-[#1a1d24]' : 'hover:bg-[#16181d]'}`}
                 >
                   <div className="flex items-center gap-4">
                     <img src={market.image_url || `https://ui-avatars.com/api/?name=${city}&background=random`} alt={city} className="w-8 h-8 rounded-full border border-[#2a2e33]" />
@@ -215,24 +215,39 @@ export default function CityWeather() {
                     <div className="text-xl font-bold text-white w-16 text-right">
                       {market.yesPrice}%
                     </div>
-                    
-                    {/* Buy Yes Button */}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setSelectedMarket(market); setTradeType('YES'); }}
-                      className="w-24 py-2 bg-[#00c853]/10 hover:bg-[#00c853]/20 border border-[#00c853]/30 text-[#00c853] font-bold rounded flex flex-col items-center justify-center transition-colors"
-                    >
-                      <span className="text-xs">Buy Yes</span>
-                      <span className="font-mono">{market.yesPrice}¢</span>
-                    </button>
-
-                    {/* Buy No Button */}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setSelectedMarket(market); setTradeType('NO'); }}
-                      className="w-24 py-2 bg-[#ff3b30]/10 hover:bg-[#ff3b30]/20 border border-[#ff3b30]/30 text-[#ff3b30] font-bold rounded flex flex-col items-center justify-center transition-colors"
-                    >
-                      <span className="text-xs">Buy No</span>
-                      <span className="font-mono">{market.noPrice}¢</span>
-                    </button>
+                    {/* Trading Interface or Resolution Status */}
+                    <div className="flex gap-4">
+                      {market.status === 'Resolved' ? (
+                        <div className={`flex items-center justify-center font-bold px-6 py-2 rounded-lg ${
+                          market.winning_outcome === 'YES' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                          market.winning_outcome === 'NO' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                          'bg-slate-700/50 text-slate-400 border border-slate-600'
+                        }`}>
+                          {market.winning_outcome ? `Resolved: ${market.winning_outcome}` : 'Cancelled'}
+                        </div>
+                      ) : new Date(market.end_date) < new Date() ? (
+                        <div className="flex items-center justify-center font-bold px-6 py-2 rounded-lg bg-slate-800/50 text-slate-400 border border-slate-700">
+                          Pending Resolution
+                        </div>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={() => { setSelectedMarket(market); setTradeType('YES'); }}
+                            className="flex flex-col items-center justify-center bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 font-bold px-4 py-2 rounded-lg min-w-[80px] transition-colors"
+                          >
+                            <span className="text-xs">Buy Yes</span>
+                            <span>{market.yesPrice}¢</span>
+                          </button>
+                          <button 
+                            onClick={() => { setSelectedMarket(market); setTradeType('NO'); }}
+                            className="flex flex-col items-center justify-center bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-bold px-4 py-2 rounded-lg min-w-[80px] transition-colors"
+                          >
+                            <span className="text-xs">Buy No</span>
+                            <span>{market.noPrice}¢</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -301,11 +316,14 @@ export default function CityWeather() {
               onClick={handleOrder}
               disabled={tradeLoading || !amount || amount <= 0 || (selectedMarket.end_date && new Date(selectedMarket.end_date) < new Date())}
               className={`w-full py-3 rounded-lg font-bold text-lg transition-colors disabled:opacity-50 ${
+                selectedMarket.status === 'Resolved' ? (selectedMarket.winning_outcome === 'YES' ? 'bg-green-500 text-black' : selectedMarket.winning_outcome === 'NO' ? 'bg-red-500 text-white' : 'bg-slate-700 text-slate-400') :
                 (selectedMarket.end_date && new Date(selectedMarket.end_date) < new Date()) ? 'bg-slate-700 text-slate-400' :
                 tradeType === 'YES' ? 'bg-[#00c853] hover:bg-[#00e676] text-black' : 'bg-[#ff3b30] hover:bg-[#ff453a] text-white'
               }`}
             >
-              {(selectedMarket.end_date && new Date(selectedMarket.end_date) < new Date()) ? 'Market Closed' : tradeLoading ? 'Processing...' : 'Trade'}
+              {selectedMarket.status === 'Resolved' ? (selectedMarket.winning_outcome ? `Resolved: ${selectedMarket.winning_outcome}` : 'Cancelled') : 
+               (selectedMarket.end_date && new Date(selectedMarket.end_date) < new Date()) ? 'Pending Resolution' : 
+               tradeLoading ? 'Processing...' : 'Trade'}
             </button>
             <p className="text-center text-[10px] text-gray-500 mt-4">By trading, you agree to the Terms of Use.</p>
           </div>
