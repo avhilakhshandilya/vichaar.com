@@ -1,6 +1,6 @@
-const axios = require('axios');
-const { supabase } = require('../utils/supabase');
-const { getImageForQuestion } = require('../utils/imageHelper');
+import axios from "axios";
+import { supabase } from "../utils/supabase.js";
+import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
 const BASE_LIQUIDITY = 10000;
 
@@ -75,4 +75,4 @@ async function seedWikipediaMarkets() {
   console.log(`🏁 [Cron] Wikipedia Seeder finished. Created ${createdCount} markets.`);
 }
 
-module.exports = { seedWikipediaMarkets };
+export {  seedWikipediaMarkets  };

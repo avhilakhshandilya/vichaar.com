@@ -1,7 +1,8 @@
-require('dotenv').config();
-const axios = require('axios');
-const { supabase } = require('../utils/supabase');
-const { getImageForQuestion } = require('../utils/imageHelper');
+import dotenv from "dotenv";
+dotenv.config();
+import axios from "axios";
+import { supabase } from "../utils/supabase.js";
+import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
 const BASE_LIQUIDITY = 10000;
 
@@ -101,4 +102,4 @@ async function seedPoliticsMarkets() {
   console.log(`🏁 [Cron] Politics Seeder finished. Created ${createdCount} markets.`);
 }
 
-exports.seedPoliticsMarkets = seedPoliticsMarkets;
+export { seedPoliticsMarkets as seedPoliticsMarkets };

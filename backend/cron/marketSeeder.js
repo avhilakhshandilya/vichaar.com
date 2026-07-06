@@ -1,20 +1,21 @@
-require('dotenv').config();
-const cron = require('node-cron');
-const axios = require('axios');
-const { supabase } = require('../utils/supabase');
-const { seedPoliticsMarkets } = require('./politicsSeeder');
-const { seedEconomicsMarkets } = require('./economicsSeeder');
-const { seedIMFMarkets } = require('./imfSeeder');
-const { seedFinanceMarkets } = require('./financeSeeder');
-const { seedWikipediaMarkets } = require('./wikipediaSeeder');
-const { seedSpaceMarkets } = require('./spaceSeeder');
-const { seedCongressMarkets } = require('./congressSeeder');
-const { seedWeatherMarkets } = require('./weatherSeeder');
-const { seedIndiaGovMarkets } = require('./indiaGovSeeder');
-const { updateMarketOdds } = require('./aiOddsUpdater');
-const { seedGeminiTrendingMarkets } = require('./geminiTrendingSeeder');
-const { seedNasaMarkets } = require('./nasaSeeder');
-const { resolveExpiredMarkets } = require('./marketResolver');
+import dotenv from "dotenv";
+dotenv.config();
+
+import axios from "axios";
+import { supabase } from "../utils/supabase.js";
+import { seedPoliticsMarkets } from "./politicsSeeder.js";
+import { seedEconomicsMarkets } from "./economicsSeeder.js";
+import { seedIMFMarkets } from "./imfSeeder.js";
+import { seedFinanceMarkets } from "./financeSeeder.js";
+import { seedWikipediaMarkets } from "./wikipediaSeeder.js";
+import { seedSpaceMarkets } from "./spaceSeeder.js";
+import { seedCongressMarkets } from "./congressSeeder.js";
+import { seedWeatherMarkets } from "./weatherSeeder.js";
+import { seedIndiaGovMarkets } from "./indiaGovSeeder.js";
+import { updateMarketOdds } from "./aiOddsUpdater.js";
+import { seedGeminiTrendingMarkets } from "./geminiTrendingSeeder.js";
+import { seedNasaMarkets } from "./nasaSeeder.js";
+import { resolveExpiredMarkets } from "./marketResolver.js";
 
 // Base Liquidity to inject into each auto-created market
 const BASE_LIQUIDITY = 10000; 
@@ -167,24 +168,23 @@ async function seedAllMarkets() {
   await seedNasaMarkets();
 }
 
-exports.startCronJobs = () => {
-  // Run seeder every midnight
-  cron.schedule('0 0 * * *', () => {
-    seedAllMarkets();
-  });
-  console.log("⏰ Automated Market Seeder Cron Job scheduled for Midnight daily.");
-
-  // Run AI Odds Updater every hour
-  cron.schedule('0 * * * *', () => {
-    updateMarketOdds();
-  });
-  console.log("⏰ Automated AI Odds Updater Cron Job scheduled for hourly execution.");
-
-  // Run AI Market Resolver every 8 hours (3 times a day)
-  cron.schedule('0 */8 * * *', () => {
-    resolveExpiredMarkets();
-  });
-  console.log("⏰ Automated AI Market Resolver Cron Job scheduled for every 8 hours (3 times a day).");
+export const startCronJobs = async (cronString) => {
+  console.log(`[Cron] Scheduled event triggered with cron: ${cronString}`);
+  
+  if (cronString === '0 0 * * *') {
+    console.log("⏰ Running Daily Market Seeder...");
+    await seedAllMarkets();
+  }
+  
+  if (cronString === '0 * * * *') {
+    console.log("⏰ Running Hourly AI Odds Updater...");
+    await updateMarketOdds();
+  }
+  
+  if (cronString === '0 */8 * * *') {
+    console.log("⏰ Running 8-Hour AI Market Resolver...");
+    await resolveExpiredMarkets();
+  }
 };
 
-exports.seedMarkets = seedAllMarkets;
+export { seedAllMarkets as seedMarkets };

@@ -1,5 +1,5 @@
-const { supabase } = require('../utils/supabase');
-const { getImageForQuestion } = require('../utils/imageHelper');
+import { supabase } from "../utils/supabase.js";
+import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
 const BASE_LIQUIDITY = 10000;
 
@@ -171,4 +171,4 @@ async function seedIndiaGovMarkets() {
   console.log(`🏁 [Cron] Indian Government Seeder finished. Created ${createdCount} markets.`);
 }
 
-module.exports = { seedIndiaGovMarkets };
+export {  seedIndiaGovMarkets  };

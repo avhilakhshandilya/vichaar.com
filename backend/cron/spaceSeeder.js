@@ -1,5 +1,5 @@
-const axios = require('axios');
-const { supabase } = require('../utils/supabase');
+import axios from "axios";
+import { supabase } from "../utils/supabase.js";
 
 const BASE_LIQUIDITY = 10000;
 
@@ -58,4 +58,4 @@ async function seedSpaceMarkets() {
   console.log(`🏁 [Cron] Space Devs Seeder finished. Created ${createdCount} markets.`);
 }
 
-module.exports = { seedSpaceMarkets };
+export {  seedSpaceMarkets  };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import MarketChart from '../components/market/MarketChart';
+
 import { Calendar, Share, Copy, Info, CheckCircle2, ChevronDown, ChevronRight } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -268,9 +268,6 @@ export default function Market() {
             </div>
           </div>
           
-          <div className="h-64 w-full bg-slate-950 rounded-lg p-4 border border-slate-800 relative">
-             <MarketChart marketId={market.id} currentYes={market.yes} />
-          </div>
 
           <div className="mt-6 flex flex-wrap gap-4 items-center justify-between border-t border-slate-800 pt-6">
             <div className="flex gap-4">

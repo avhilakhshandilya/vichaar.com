@@ -1,6 +1,6 @@
-const { supabase } = require("../utils/supabase");
+import { supabase } from "../utils/supabase.js";
 
-exports.addComment = async (req, res) => {
+export const addComment = async (req, res) => {
   try {
     const { market_id, user_id, content, parent_id } = req.body;
 
@@ -34,7 +34,7 @@ exports.addComment = async (req, res) => {
   }
 };
 
-exports.getComments = async (req, res) => {
+export const getComments = async (req, res) => {
   try {
     const { market_id } = req.params;
 

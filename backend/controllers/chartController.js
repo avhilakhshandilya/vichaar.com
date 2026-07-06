@@ -1,6 +1,6 @@
-const { supabase } = require("../utils/supabase");
+import { supabase } from "../utils/supabase.js";
 
-exports.getMarketHistory = async (req, res) => {
+export const getMarketHistory = async (req, res) => {
   try {
     const { market_id } = req.params;
 

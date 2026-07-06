@@ -1,6 +1,6 @@
-const { supabase } = require("../utils/supabase");
+import { supabase } from "../utils/supabase.js";
 
-exports.vote = async (req, res) => {
+export const vote = async (req, res) => {
   try {
     const { user_id, market_id, choice, amount } = req.body;
     
@@ -21,6 +21,27 @@ exports.vote = async (req, res) => {
       return res.status(400).json({ success: false, message: "Insufficient points" });
     }
 
+    // Fetch market details before executing any deductions
+    const { data: market, error: marketError } = await supabase
+      .from('markets')
+      .select('house_yes_points, house_no_points, end_date, status')
+      .eq('market_id', market_id)
+      .single();
+      
+    if (marketError) throw marketError;
+
+    if (market.status !== 'Active') {
+      return res.status(400).json({ success: false, message: "Market is no longer active" });
+    }
+
+    const now = new Date();
+    const endDate = new Date(market.end_date);
+    const hoursDifference = (endDate - now) / (1000 * 60 * 60);
+
+    if (hoursDifference <= 20) {
+      return res.status(400).json({ success: false, message: "Trading is closed for this market (resolves in less than 20 hours)" });
+    }
+
     // Execute updates
     const { error: updateError } = await supabase
       .from('users')
@@ -28,14 +49,6 @@ exports.vote = async (req, res) => {
       .eq('user_id', user_id);
       
     if (updateError) throw updateError;
-
-    const { data: market, error: marketError } = await supabase
-      .from('markets')
-      .select('house_yes_points, house_no_points')
-      .eq('market_id', market_id)
-      .single();
-      
-    if (marketError) throw marketError;
 
     const updates = {};
     if (choice.toUpperCase() === 'YES') {
@@ -67,7 +80,7 @@ exports.vote = async (req, res) => {
   }
 };
 
-exports.getActivityFeed = async (req, res) => {
+export const getActivityFeed = async (req, res) => {
   try {
     // 1. Fetch latest 10 votes with user and market info
     const { data: votes, error: votesError } = await supabase
@@ -127,7 +140,7 @@ exports.getActivityFeed = async (req, res) => {
   }
 };
 
-exports.resolveMarket = async (req, res) => {
+export const resolveMarket = async (req, res) => {
   try {
     const { market_id, winning_outcome } = req.body; // 'YES', 'NO', 'CANCEL'
     
@@ -233,7 +246,7 @@ exports.resolveMarket = async (req, res) => {
   }
 };
 
-exports.createMarket = async (req, res) => {
+export const createMarket = async (req, res) => {
   try {
     const { question, category, image_url, end_date, house_yes_points, house_no_points } = req.body;
     

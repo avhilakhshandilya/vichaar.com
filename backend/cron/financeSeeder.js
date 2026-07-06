@@ -1,7 +1,6 @@
-const YahooFinance = require('yahoo-finance2').default || require('yahoo-finance2');
-const yahooFinance = new YahooFinance({ suppressNotices: ['yahooSurvey'] });
-const { supabase } = require('../utils/supabase');
-const { getImageForQuestion } = require('../utils/imageHelper');
+import yahooFinance from "yahoo-finance2";
+import { supabase } from "../utils/supabase.js";
+import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
 const BASE_LIQUIDITY = 10000;
 
@@ -76,4 +75,4 @@ async function seedFinanceMarkets() {
   console.log(`🏁 [Cron] Finance Seeder finished. Created ${createdCount} markets.`);
 }
 
-module.exports = { seedFinanceMarkets };
+export {  seedFinanceMarkets  };

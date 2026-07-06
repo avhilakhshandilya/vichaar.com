@@ -1,7 +1,7 @@
-const { supabase } = require("../utils/supabase");
-const bcrypt = require("bcrypt");
+import { supabase } from "../utils/supabase.js";
+import bcrypt from "bcryptjs";
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -51,7 +51,7 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.signup = async (req, res) => {
+export const signup = async (req, res) => {
   try {
     const { username, display_name, password } = req.body;
 

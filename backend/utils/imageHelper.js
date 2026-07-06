@@ -148,4 +148,4 @@ function getImageForQuestion(question) {
   return IMAGES.trending;
 }
 
-module.exports = { getImageForQuestion, IMAGES };
+export { getImageForQuestion, IMAGES };

@@ -1,6 +1,6 @@
-const { supabase } = require("../utils/supabase");
+import { supabase } from "../utils/supabase.js";
 
-exports.deposit = async (req, res) => {
+export const deposit = async (req, res) => {
   try {
     const { user_id, amount } = req.body;
 
@@ -40,7 +40,7 @@ exports.deposit = async (req, res) => {
   }
 };
 
-exports.withdraw = async (req, res) => {
+export const withdraw = async (req, res) => {
   try {
     const { user_id, amount } = req.body;
 

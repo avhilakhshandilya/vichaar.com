@@ -1,6 +1,6 @@
-const axios = require('axios');
-const { supabase } = require('../utils/supabase');
-const { getImageForQuestion, IMAGES } = require('../utils/imageHelper');
+import axios from "axios";
+import { supabase } from "../utils/supabase.js";
+import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
 const BASE_LIQUIDITY = 10000;
 const NASA_KEY = process.env.NASA_API_KEY || 'DEMO_KEY';
@@ -166,9 +166,6 @@ async function seedNasaMarkets() {
   console.log(`🏁 [Cron] NASA Seeder finished. Created ${createdCount} markets.`);
 }
 
-module.exports = { seedNasaMarkets };
+export {  seedNasaMarkets  };
 
 // Manual run
-if (require.main === module) {
-  seedNasaMarkets();
-}

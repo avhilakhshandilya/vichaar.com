@@ -1,8 +1,9 @@
-require('dotenv').config();
-const axios = require('axios');
-const { supabase } = require('../utils/supabase');
-const { GoogleGenAI } = require('@google/genai');
-const { getImageForQuestion } = require('../utils/imageHelper');
+import dotenv from "dotenv";
+dotenv.config();
+import axios from "axios";
+import { supabase } from "../utils/supabase.js";
+import { GoogleGenAI } from "@google/genai";
+import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
 const BASE_LIQUIDITY = 10000;
 
@@ -79,8 +80,7 @@ ${dataGovInText}
     console.log("📊 Compiled Economic Data:\n" + compiledData);
 
     // 4. Ask Gemini to generate markets
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
+        
     const prompt = `
 You are an expert Prediction Market Maker specializing in Economics. 
 I am providing you with recent macroeconomic API data and public interest metrics.
@@ -171,8 +171,5 @@ Return a JSON array of objects exactly in this format, with no markdown formatti
   }
 }
 
-exports.seedEconomicsMarkets = seedEconomicsMarkets;
+export { seedEconomicsMarkets as seedEconomicsMarkets };
 
-if (require.main === module) {
-  seedEconomicsMarkets();
-}

@@ -1,8 +1,9 @@
-require('dotenv').config();
-const axios = require('axios');
-const { supabase } = require('../utils/supabase');
-const { GoogleGenAI } = require('@google/genai');
-const { getImageForQuestion } = require('../utils/imageHelper');
+import dotenv from "dotenv";
+dotenv.config();
+import axios from "axios";
+import { supabase } from "../utils/supabase.js";
+import { GoogleGenAI } from "@google/genai";
+import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
 const BASE_LIQUIDITY = 10000;
 
@@ -42,8 +43,7 @@ async function seedGeminiTrendingMarkets() {
     console.log("📰 Headlines to process:\n" + newsSummary);
 
     // 2. Ask Gemini to generate markets
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
+        
     const prompt = `
 You are a Prediction Market Maker. I will give you a list of breaking news headlines.
 Your job is to generate exactly 5 interesting Yes/No prediction market questions based on these topics.
@@ -127,9 +127,6 @@ Return a JSON array of objects exactly in this format, with no markdown formatti
   }
 }
 
-exports.seedGeminiTrendingMarkets = seedGeminiTrendingMarkets;
+export { seedGeminiTrendingMarkets as seedGeminiTrendingMarkets };
 
 // For manual execution testing
-if (require.main === module) {
-  seedGeminiTrendingMarkets();
-}

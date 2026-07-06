@@ -1,5 +1,6 @@
-require('dotenv').config();
-const { supabase } = require('../utils/supabase');
+import dotenv from "dotenv";
+dotenv.config();
+import { supabase } from "../utils/supabase.js";
 
 async function seedWorldCup() {
   const options = [

@@ -1,6 +1,8 @@
-require('dotenv').config();
-const axios = require('axios');
-const { supabase } = require('../utils/supabase');
+import dotenv from "dotenv";
+dotenv.config();
+import axios from "axios";
+import { supabase } from "../utils/supabase.js";
+import { resolveMarket } from "../controllers/marketController.js";
 
 async function askGroq(prompt) {
   if (!process.env.GROQ_API_KEY) throw new Error("GROQ_API_KEY missing");
@@ -130,17 +132,16 @@ Return ONLY a JSON object in this format (no markdown, no backticks, no other te
         if (result && (result.outcome === 'YES' || result.outcome === 'NO')) {
           console.log(`   ➡️ Triggering payout for ${result.outcome}...`);
           
-          // Hit the local API to execute resolution
-          const resolveRes = await axios.post(`http://localhost:${process.env.PORT || 5000}/api/markets/resolve`, {
-            market_id: market.market_id,
-            winning_outcome: result.outcome
-          });
+          // Execute resolution directly via controller
+          const mockReq = { body: { market_id: market.market_id, winning_outcome: result.outcome } };
+          const mockRes = { status: () => mockRes, json: (data) => data };
+          const resolveData = await resolveMarket(mockReq, mockRes);
 
-          if (resolveRes.data.success) {
+          if (resolveData && resolveData.success) {
              console.log(`   ✅ Successfully resolved and paid out!`);
              resolvedCount++;
           } else {
-             console.error(`   ❌ Failed to resolve via API:`, resolveRes.data.message);
+             console.error(`   ❌ Failed to resolve via internal function:`, resolveData?.message);
           }
         } else {
           console.log(`   ⏭️ Skipping market. AI could not confidently resolve it.`);
@@ -158,9 +159,6 @@ Return ONLY a JSON object in this format (no markdown, no backticks, no other te
   }
 }
 
-module.exports = { resolveExpiredMarkets };
+export {  resolveExpiredMarkets  };
 
 // For manual testing
-if (require.main === module) {
-  resolveExpiredMarkets();
-}

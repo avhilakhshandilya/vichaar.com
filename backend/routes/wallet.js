@@ -1,8 +1,34 @@
-const express = require("express");
-const router = express.Router();
-const { deposit, withdraw } = require("../controllers/walletController");
+import { Hono } from "hono";
+const router = new Hono();
+import * as ctrl from "../controllers/walletController.js";
 
-router.post("/deposit", deposit);
-router.post("/withdraw", withdraw);
+router.post('/deposit', async (c) => {
+  let statusCode = 200;
+  const req = {
+    body: await c.req.json().catch(()=>({})),
+    params: c.req.param(),
+    query: c.req.query(),
+    headers: c.req.header(),
+  };
+  const res = {
+    status: (code) => { statusCode = code; return res; },
+    json: (data) => c.json(data, statusCode)
+  };
+  return await ctrl.deposit(req, res);
+});
+router.post('/withdraw', async (c) => {
+  let statusCode = 200;
+  const req = {
+    body: await c.req.json().catch(()=>({})),
+    params: c.req.param(),
+    query: c.req.query(),
+    headers: c.req.header(),
+  };
+  const res = {
+    status: (code) => { statusCode = code; return res; },
+    json: (data) => c.json(data, statusCode)
+  };
+  return await ctrl.withdraw(req, res);
+});
 
-module.exports = router;
+export default router;

@@ -1,0 +1,11 @@
+name = "vichaar-backend"
+main = "index.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = [
+  "0 0 * * *",    # Midnight for Market Seeder
+  "0 * * * *",    # Hourly for AI Odds Updater
+  "0 */8 * * *"   # Every 8 hours for AI Market Resolver
+]

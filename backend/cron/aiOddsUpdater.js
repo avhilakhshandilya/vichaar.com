@@ -1,11 +1,11 @@
-require('dotenv').config();
-const { createClient } = require('@supabase/supabase-js');
-const { GoogleGenAI, Type } = require('@google/genai');
+import dotenv from "dotenv";
+dotenv.config();
+import { supabase } from "../utils/supabase.js";
+import { GoogleGenAI, Type } from "@google/genai";
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 async function updateMarketOdds() {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   console.log("🤖 [AI Oracle] Starting Dynamic Odds Updater...");
 
   try {
@@ -129,9 +129,6 @@ async function updateMarketOdds() {
 }
 
 // Export for main cron runner
-module.exports = { updateMarketOdds };
+export {  updateMarketOdds  };
 
 // Allow direct execution
-if (require.main === module) {
-  updateMarketOdds().then(() => process.exit(0));
-}

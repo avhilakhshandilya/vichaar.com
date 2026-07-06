@@ -1,7 +1,7 @@
-const { supabase } = require("../utils/supabase");
-const bcrypt = require("bcrypt");
+import { supabase } from "../utils/supabase.js";
+import bcrypt from "bcryptjs";
 
-exports.claimDailyBonus = async (req, res) => {
+export const claimDailyBonus = async (req, res) => {
   try {
     const { user_id } = req.body;
     if (!user_id) return res.status(400).json({ success: false, message: "Missing user_id" });
@@ -57,7 +57,7 @@ exports.claimDailyBonus = async (req, res) => {
   }
 };
 
-exports.getPortfolio = async (req, res) => {
+export const getPortfolio = async (req, res) => {
   try {
     const { user_id } = req.params;
     
@@ -110,7 +110,7 @@ exports.getPortfolio = async (req, res) => {
   }
 };
 
-exports.getLeaderboard = async (req, res) => {
+export const getLeaderboard = async (req, res) => {
   try {
     const { data: users, error } = await supabase
       .from('users')
@@ -127,7 +127,7 @@ exports.getLeaderboard = async (req, res) => {
   }
 };
 
-exports.getPublicProfile = async (req, res) => {
+export const getPublicProfile = async (req, res) => {
   try {
     const { username } = req.params;
     
@@ -221,7 +221,7 @@ exports.getPublicProfile = async (req, res) => {
   }
 };
 
-exports.getNotifications = async (req, res) => {
+export const getNotifications = async (req, res) => {
   try {
     const { user_id } = req.query;
     if (!user_id) return res.status(400).json({ success: false, message: "User ID required" });
@@ -242,7 +242,7 @@ exports.getNotifications = async (req, res) => {
   }
 };
 
-exports.markNotificationsRead = async (req, res) => {
+export const markNotificationsRead = async (req, res) => {
   try {
     const { user_id } = req.body;
     if (!user_id) return res.status(400).json({ success: false, message: "User ID required" });
@@ -262,7 +262,7 @@ exports.markNotificationsRead = async (req, res) => {
   }
 };
 
-exports.updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
   try {
     const { user_id, display_name } = req.body;
     
@@ -290,7 +290,7 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-exports.updateEmail = async (req, res) => {
+export const updateEmail = async (req, res) => {
   try {
     const { user_id, email } = req.body;
     
@@ -324,7 +324,7 @@ exports.updateEmail = async (req, res) => {
   }
 };
 
-exports.updatePassword = async (req, res) => {
+export const updatePassword = async (req, res) => {
   try {
     const { user_id, old_password, new_password } = req.body;
 
