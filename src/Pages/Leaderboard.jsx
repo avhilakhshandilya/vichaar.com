@@ -30,7 +30,7 @@ export default function Leaderboard() {
       <div className="flex justify-between items-end mb-8">
         <div>
           <h1 className="text-4xl font-bold text-white mb-2">Top Traders</h1>
-          <p className="text-slate-400">Global rankings based on total portfolio value.</p>
+          <p className="text-slate-400">Global rankings based on prediction accuracy (win rate).</p>
         </div>
       </div>
 
@@ -69,7 +69,7 @@ export default function Leaderboard() {
                 </div>
                 
                 <div className="text-right font-mono text-slate-300 hidden sm:block">
-                  --%
+                  {trader.winRate ?? 0}%
                 </div>
                 
                 <div className="text-right font-mono font-bold text-green-400">

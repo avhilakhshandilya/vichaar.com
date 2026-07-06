@@ -112,15 +112,58 @@ export const getPortfolio = async (req, res) => {
 
 export const getLeaderboard = async (req, res) => {
   try {
-    const { data: users, error } = await supabase
+    // Fetch all users
+    const { data: users, error: usersError } = await supabase
       .from('users')
-      .select('username, display_name, total_points')
-      .order('total_points', { ascending: false })
-      .limit(10);
+      .select('user_id, username, display_name, total_points');
+      
+    if (usersError) throw usersError;
 
-    if (error) throw error;
+    // Fetch all votes with market status
+    const { data: votes, error: votesError } = await supabase
+      .from('votes')
+      .select(`
+        user_id,
+        choice,
+        markets (
+          status,
+          winning_outcome
+        )
+      `);
 
-    return res.json({ success: true, leaderboard: users });
+    if (votesError) throw votesError;
+
+    const userStats = {};
+    users.forEach(u => {
+      userStats[u.user_id] = { ...u, correctBets: 0, totalResolved: 0 };
+    });
+
+    votes.forEach(v => {
+      // Only count resolved markets
+      if (v.markets && v.markets.status === 'Resolved' && userStats[v.user_id]) {
+        userStats[v.user_id].totalResolved++;
+        if (v.choice === v.markets.winning_outcome) {
+          userStats[v.user_id].correctBets++;
+        }
+      }
+    });
+
+    let leaderboard = Object.values(userStats).map(u => {
+      const winRate = u.totalResolved > 0 ? Math.round((u.correctBets / u.totalResolved) * 100) : 0;
+      return { ...u, winRate };
+    });
+
+    // Sort by winRate descending, then totalResolved (tiebreaker), then total_points
+    leaderboard.sort((a, b) => {
+      if (b.winRate !== a.winRate) return b.winRate - a.winRate;
+      if (b.totalResolved !== a.totalResolved) return b.totalResolved - a.totalResolved;
+      return b.total_points - a.total_points;
+    });
+
+    // Get top 20
+    leaderboard = leaderboard.slice(0, 20);
+
+    return res.json({ success: true, leaderboard });
   } catch (error) {
     console.error("Leaderboard Error:", error);
     res.status(500).json({ success: false, message: error.message });
