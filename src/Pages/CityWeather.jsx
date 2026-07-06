@@ -185,10 +185,16 @@ export default function CityWeather() {
             <div className="flex items-center gap-2">
               <span>Thresholds for {activeDate}</span>
             </div>
-            <div className="flex gap-16 pr-4">
-               <span>Buy Yes</span>
-               <span>Buy No</span>
-            </div>
+            {activeMarketsForDate.some(m => m.status !== 'Resolved' && new Date(m.end_date) >= new Date()) ? (
+              <div className="flex gap-16 pr-4">
+                 <span>Buy Yes</span>
+                 <span>Buy No</span>
+              </div>
+            ) : (
+              <div className="flex pr-12">
+                 <span>Result</span>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col">
