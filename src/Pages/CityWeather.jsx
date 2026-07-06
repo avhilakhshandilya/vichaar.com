@@ -44,7 +44,7 @@ export default function CityWeather() {
             id: m.market_id,
             city: match[1],
             metricType: match[2],
-            threshold: match[3],
+            threshold: parseFloat(match[3]),
             dateLabel: match[4],
             question: m.question,
             yesPrice: Math.round(yes * 100),
@@ -55,7 +55,7 @@ export default function CityWeather() {
             image_url: m.image_url,
             end_date: m.end_date
           };
-        }).filter(m => m !== null);
+        }).filter(m => m !== null && new Date(m.end_date) > new Date());
         
         setMarkets(parsedMarkets);
         
