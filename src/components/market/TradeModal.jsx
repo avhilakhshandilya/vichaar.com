@@ -74,10 +74,7 @@ export default function TradeModal({ isOpen, onClose, market, tradeType, onVoteS
           <p className="text-sm text-green-400 mt-2">Current Price: {price}¢</p>
         </div>
 
-        {/* Chart */}
-        <div className="h-40 w-full mb-6 bg-slate-950 rounded-lg p-2 border border-slate-800">
-          <MarketChart marketId={market.id} currentYes={market.yes} />
-        </div>
+
 
         {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 

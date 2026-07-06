@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 import { Trophy, Info, Calendar } from 'lucide-react';
-import MultiMarketChart from '../components/market/MultiMarketChart';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -238,10 +237,7 @@ export default function MultiEvent() {
           )}
         </div>
         
-        {/* Chart Area */}
-        <div className="h-64 w-full bg-[#111317] rounded-xl p-4 border border-[#2a2e33] relative">
-           <MultiMarketChart markets={markets} />
-        </div>
+
 
         {/* Options List */}
         <div className="bg-[#111317] border border-[#2a2e33] rounded-2xl overflow-hidden mt-4">

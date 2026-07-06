@@ -3,8 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import SportsMatchRow from "../components/market/SportsMatchRow";
 import MarketCard from "../components/market/MarketCard";
 import MultiMarketCard from "../components/market/MultiMarketCard";
-import MarketChart from "../components/market/MarketChart";
-import MultiMarketChart from "../components/market/MultiMarketChart";
+
 import ActivityFeed from "../components/ActivityFeed";
 import { getMarkets } from "../services/marketService";
 import { groupMarkets } from "../utils/marketUtils";
