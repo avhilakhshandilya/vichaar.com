@@ -338,18 +338,18 @@ export default function CityWeather() {
         </div>
 
         {/* Comment Section */}
-        <div className="bg-[#111317] border border-[#2a2e33] rounded-2xl p-6 mt-4">
-          <h2 className="text-xl font-bold text-white mb-4">City Weather Discussion</h2>
+        <div className="bg-[#111317] border border-[#2a2e33] rounded-2xl p-4 sm:p-6 mt-4">
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-4">City Weather Discussion</h2>
           
-          <form onSubmit={submitComment} className="flex gap-4 mb-8">
+          <form onSubmit={submitComment} className="flex gap-2 sm:gap-4 mb-8">
             <input 
               type="text" 
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder={`What are your thoughts on ${city}'s weather?`} 
-              className="flex-grow bg-[#16181d] border border-[#2a2e33] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00c853] transition-colors"
+              className="flex-grow min-w-0 w-full bg-[#16181d] border border-[#2a2e33] rounded-lg px-3 sm:px-4 py-2 text-sm sm:text-base text-white focus:outline-none focus:border-[#00c853] transition-colors"
             />
-            <button type="submit" className="bg-[#2a2e33] hover:bg-[#3a3f45] text-white font-bold px-6 rounded-lg transition-colors border border-[#3a3f45]">
+            <button type="submit" className="shrink-0 bg-[#2a2e33] hover:bg-[#3a3f45] text-white text-sm sm:text-base font-bold px-4 sm:px-6 rounded-lg transition-colors border border-[#3a3f45]">
               Post
             </button>
           </form>
