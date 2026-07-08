@@ -45,20 +45,36 @@ export default function MarketCard({ market }) {
         <span className="text-gray-500 font-mono text-xs">${totalVol > 0 ? totalVol.toLocaleString() : '10,000'} Vol.</span>
       </div>
       
-      {/* Buttons */}
+      {/* Buttons or Status */}
       <div className="flex gap-3">
-         <button 
-           onClick={handleClick}
-           className="flex-1 bg-[#00c853]/10 hover:bg-[#00c853]/20 text-[#00c853] border border-[#00c853]/30 py-2 rounded-lg font-bold text-sm transition-colors flex justify-between px-3 items-center"
-         >
-           <span>Yes</span> <span className="font-mono">{market.yes}%</span>
-         </button>
-         <button 
-           onClick={handleClick}
-           className="flex-1 bg-[#ff3b30]/10 hover:bg-[#ff3b30]/20 text-[#ff3b30] border border-[#ff3b30]/30 py-2 rounded-lg font-bold text-sm transition-colors flex justify-between px-3 items-center"
-         >
-           <span>No</span> <span className="font-mono">{market.no}%</span>
-         </button>
+        {market.status === 'Resolved' ? (
+          <div className={`flex-1 py-2 rounded-lg font-bold text-sm text-center border ${market.winning_outcome === 'YES' ? 'bg-[#00c853]/10 text-[#00c853] border-[#00c853]/30' : market.winning_outcome === 'NO' ? 'bg-[#ff3b30]/10 text-[#ff3b30] border-[#ff3b30]/30' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
+            {market.winning_outcome ? `Resolved: ${market.winning_outcome}` : 'Cancelled'}
+          </div>
+        ) : market.status === 'CANCEL' ? (
+          <div className="flex-1 py-2 rounded-lg font-bold text-sm text-center bg-slate-800 text-slate-400 border border-slate-700">
+            Cancelled
+          </div>
+        ) : new Date(market.end_date) <= new Date() ? (
+          <div className="flex-1 py-2 rounded-lg font-bold text-sm text-center bg-slate-800/50 text-slate-400 border border-slate-700">
+            Pending Resolution
+          </div>
+        ) : (
+          <>
+            <button 
+              onClick={handleClick}
+              className="flex-1 bg-[#00c853]/10 hover:bg-[#00c853]/20 text-[#00c853] border border-[#00c853]/30 py-2 rounded-lg font-bold text-sm transition-colors flex justify-between px-3 items-center"
+            >
+              <span>Yes</span> <span className="font-mono">{market.yes}%</span>
+            </button>
+            <button 
+              onClick={handleClick}
+              className="flex-1 bg-[#ff3b30]/10 hover:bg-[#ff3b30]/20 text-[#ff3b30] border border-[#ff3b30]/30 py-2 rounded-lg font-bold text-sm transition-colors flex justify-between px-3 items-center"
+            >
+              <span>No</span> <span className="font-mono">{market.no}%</span>
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -13,13 +13,12 @@ import { Trophy } from 'lucide-react';
 function Home() {
   const navigate = useNavigate();
   const [markets, setMarkets] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('Active');
 
   useEffect(() => {
     async function loadMarkets() {
       const data = await getMarkets();
-      const now = new Date();
       const formattedMarkets = data
-        .filter(m => m.status === 'Active' && new Date(m.end_date) > now)
         .map(formatMarket)
         .filter(m => m.category === 'Weather'); // Only keep Weather markets
       setMarkets(formattedMarkets);
@@ -103,6 +102,13 @@ function Home() {
     displayedMarkets = displayedMarkets.filter(m => m.question.toLowerCase().includes(query.toLowerCase()));
   }
 
+  const now = new Date();
+  if (statusFilter === 'Active') {
+    displayedMarkets = displayedMarkets.filter(m => m.status === 'Active' && new Date(m.end_date) > now);
+  } else if (statusFilter === 'Past') {
+    displayedMarkets = displayedMarkets.filter(m => m.status === 'Resolved' || m.status === 'CANCEL' || new Date(m.end_date) <= now);
+  }
+
   let groupedMarkets = groupMarkets(displayedMarkets);
   if (category && category.toLowerCase() === 'trending') {
     groupedMarkets.sort((a, b) => {
@@ -122,8 +128,20 @@ function Home() {
     <div className="bg-[#0f1115] text-white min-h-screen pb-10">
       
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-6 flex flex-col gap-8">
+      <div className="max-w-7xl mx-auto px-6 flex flex-col gap-8 pt-6">
         
+        <div className="flex justify-between items-center mb-2">
+          <h1 className="text-2xl font-bold text-white">{statusFilter === 'Active' ? 'Active Markets' : 'Past Markets'}</h1>
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-[#16181d] border border-[#2a2e33] text-white px-4 py-2 text-sm font-bold rounded-lg focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
+          >
+            <option value="Active">Active</option>
+            <option value="Past">Past</option>
+          </select>
+        </div>
+
         {/* Left Column (Featured Market + Grid) */}
         <div className="w-full flex flex-col gap-6">
           
