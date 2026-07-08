@@ -35,10 +35,9 @@ export default function Leaderboard() {
       </div>
 
       <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-        <div className="grid grid-cols-4 p-4 border-b border-slate-800 text-sm font-semibold text-slate-400 uppercase tracking-wider">
-          <div className="col-span-3 sm:col-span-2">Trader</div>
-          <div className="text-right hidden sm:block">Win Rate</div>
-          <div className="text-right">Total Points</div>
+        <div className="flex justify-between p-4 border-b border-slate-800 text-sm font-semibold text-slate-400 uppercase tracking-wider">
+          <div>Trader</div>
+          <div className="text-right">Win Rate</div>
         </div>
 
         <div className="divide-y divide-slate-800/50">
@@ -47,8 +46,8 @@ export default function Leaderboard() {
           ) : traders.map((trader, index) => {
             const rank = index + 1;
             return (
-              <Link to={`/user/${trader.username}`} key={trader.username} className="grid grid-cols-4 p-4 items-center hover:bg-slate-800/50 transition-colors cursor-pointer">
-                <div className="col-span-3 sm:col-span-2 flex items-center gap-4">
+              <Link to={`/user/${trader.username}`} key={trader.username} className="flex justify-between items-center p-4 hover:bg-slate-800/50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-4">
                   <span className={`text-xl font-bold w-6 text-center ${
                     rank === 1 ? 'text-yellow-400' :
                     rank === 2 ? 'text-slate-300' :
@@ -58,7 +57,7 @@ export default function Leaderboard() {
                     #{rank}
                   </span>
                   
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-green-400 font-bold border border-slate-700 uppercase">
+                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-green-400 font-bold border border-slate-700 uppercase shrink-0">
                     {trader.display_name.charAt(0)}
                   </div>
                   
@@ -68,12 +67,8 @@ export default function Leaderboard() {
                   </div>
                 </div>
                 
-                <div className="text-right font-mono text-slate-300 hidden sm:block">
+                <div className="text-right font-mono text-lg font-bold text-white">
                   {trader.winRate ?? 0}%
-                </div>
-                
-                <div className="text-right font-mono font-bold text-green-400">
-                  ₹{trader.total_points.toLocaleString()}
                 </div>
               </Link>
             );

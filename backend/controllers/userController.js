@@ -97,6 +97,7 @@ export const getPortfolio = async (req, res) => {
       type: v.choice,
       amount: v.amount,
       status: v.markets.status,
+      winning_outcome: v.markets.winning_outcome,
     }));
 
     return res.json({
@@ -141,9 +142,11 @@ export const getLeaderboard = async (req, res) => {
     votes.forEach(v => {
       // Only count resolved markets
       if (v.markets && v.markets.status === 'Resolved' && userStats[v.user_id]) {
-        userStats[v.user_id].totalResolved++;
-        if (v.choice === v.markets.winning_outcome) {
-          userStats[v.user_id].correctBets++;
+        if (v.markets.winning_outcome !== 'CANCEL') {
+          userStats[v.user_id].totalResolved++;
+          if (v.choice === v.markets.winning_outcome) {
+            userStats[v.user_id].correctBets++;
+          }
         }
       }
     });
@@ -222,7 +225,7 @@ export const getPublicProfile = async (req, res) => {
         volume: cumulativeVolume
       });
 
-      if (isResolved) {
+      if (isResolved && v.markets.winning_outcome !== 'CANCEL') {
         totalResolved++;
         if (isWinner) correctBets++;
       }
