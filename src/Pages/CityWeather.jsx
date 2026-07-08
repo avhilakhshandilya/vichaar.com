@@ -198,6 +198,22 @@ export default function CityWeather() {
   if (markets.length === 0) return <div className="p-10 text-center text-red-500">No active weather markets found for {city}</div>;
 
   const uniqueDates = [...new Set(markets.map(m => m.dateLabel))];
+  
+  // Categorize dates into active and past
+  const pastDates = [];
+  const activeDates = [];
+  
+  uniqueDates.forEach(dateStr => {
+    const dateMarkets = markets.filter(m => m.dateLabel === dateStr);
+    // It's a past date if ALL markets for this date are Resolved OR their end_date has passed
+    const isPast = dateMarkets.every(m => m.status === 'Resolved' || new Date(m.end_date) < new Date());
+    if (isPast) {
+      pastDates.push(dateStr);
+    } else {
+      activeDates.push(dateStr);
+    }
+  });
+
   const activeMarketsForDate = markets.filter(m => m.dateLabel === activeDate).sort((a, b) => {
     // Attempt to sort by threshold numerically
     const aVal = parseFloat(a.threshold);
@@ -235,12 +251,41 @@ export default function CityWeather() {
         </div>
         
         {/* Date Tabs (Pill Buttons) */}
-        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-          {uniqueDates.map(dateStr => (
+        <div className="flex gap-2 overflow-x-visible pb-2 custom-scrollbar items-center">
+          {pastDates.length > 0 && (
+            <div className="relative group shrink-0">
+              <button
+                className={`px-4 sm:px-5 py-2 rounded-full font-bold whitespace-nowrap transition-colors border flex items-center gap-2 ${
+                  pastDates.includes(activeDate) 
+                    ? 'bg-slate-700 text-white border-slate-600 shadow-lg shadow-slate-900/20' 
+                    : 'bg-[#111317] text-slate-400 border-[#2a2e33] hover:text-white hover:bg-[#1a1d24]'
+                }`}
+              >
+                Past <span className="text-[10px]">▼</span>
+              </button>
+              
+              {/* Dropdown Menu */}
+              <div className="absolute left-0 top-full mt-2 w-48 bg-[#16181d] border border-[#2a2e33] rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[100] py-2">
+                {pastDates.map(dateStr => (
+                  <button
+                    key={dateStr}
+                    onClick={() => { setActiveDate(dateStr); setSelectedMarket(null); }}
+                    className={`w-full text-left px-4 py-2 text-sm font-bold hover:bg-[#2a2e33] transition-colors ${
+                      activeDate === dateStr ? 'text-blue-400 bg-[#2a2e33]/30' : 'text-slate-300'
+                    }`}
+                  >
+                    {dateStr}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeDates.map(dateStr => (
             <button
               key={dateStr}
               onClick={() => { setActiveDate(dateStr); setSelectedMarket(null); }}
-              className={`px-5 py-2 rounded-full font-bold whitespace-nowrap transition-colors border ${
+              className={`px-5 py-2 rounded-full font-bold whitespace-nowrap transition-colors border shrink-0 ${
                 activeDate === dateStr 
                   ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-500/20' 
                   : 'bg-[#111317] text-slate-400 border-[#2a2e33] hover:text-white hover:bg-[#1a1d24]'
