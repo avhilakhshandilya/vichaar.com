@@ -34,3 +34,14 @@ export const groupMarkets = (markets) => {
   
   return result;
 };
+
+export const calculateSmoothedPercentages = (yesVotes, noVotes, smoothingFactor = 10) => {
+  const smoothedYes = (yesVotes || 0) + smoothingFactor;
+  const smoothedNo = (noVotes || 0) + smoothingFactor;
+  const totalSmoothed = smoothedYes + smoothedNo;
+  
+  const yes = Math.round((smoothedYes / totalSmoothed) * 100);
+  const no = 100 - yes;
+  
+  return { yes, no, totalVotes: (yesVotes || 0) + (noVotes || 0) };
+};

@@ -1,9 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { calculateSmoothedPercentages } from '../../utils/marketUtils';
 
 export default function MarketCard({ market }) {
   const navigate = useNavigate();
-  const totalVol = (market.house_yes_points || 0) + (market.house_no_points || 0);
+  const { yes, no, totalVotes } = calculateSmoothedPercentages(market.house_yes_points, market.house_no_points);
 
   const handleClick = (e) => {
     if (e) e.stopPropagation();
@@ -28,6 +29,7 @@ export default function MarketCard({ market }) {
           src={market.image_url || `https://ui-avatars.com/api/?name=${market.category}&background=random`} 
           alt={market.category} 
           className="w-12 h-12 rounded-xl object-cover border border-[#2a2e33]" 
+          onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${market.category}&background=random` }}
         />
         <div className="flex flex-col">
           <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">{market.category}</span>
@@ -41,8 +43,8 @@ export default function MarketCard({ market }) {
       
       {/* Stats */}
       <div className="flex items-center justify-between text-sm mt-auto mb-4 border-b border-[#2a2e33] pb-4">
-        <span className="text-white font-bold text-2xl">{market.yes}% <span className="text-gray-500 text-sm font-normal">chance</span></span>
-        <span className="text-gray-500 font-mono text-xs">${totalVol > 0 ? totalVol.toLocaleString() : '10,000'} Vol.</span>
+        <span className="text-white font-bold text-2xl">{yes}% <span className="text-gray-500 text-sm font-normal">chance</span></span>
+        <span className="text-gray-500 font-mono text-xs">{totalVotes} Votes</span>
       </div>
       
       {/* Buttons or Status */}
@@ -65,13 +67,13 @@ export default function MarketCard({ market }) {
               onClick={handleClick}
               className="flex-1 bg-[#00c853]/10 hover:bg-[#00c853]/20 text-[#00c853] border border-[#00c853]/30 py-2 rounded-lg font-bold text-sm transition-colors flex justify-between px-3 items-center"
             >
-              <span>Yes</span> <span className="font-mono">{market.yes}%</span>
+              <span>Yes</span> <span className="font-mono">{yes}%</span>
             </button>
             <button 
               onClick={handleClick}
               className="flex-1 bg-[#ff3b30]/10 hover:bg-[#ff3b30]/20 text-[#ff3b30] border border-[#ff3b30]/30 py-2 rounded-lg font-bold text-sm transition-colors flex justify-between px-3 items-center"
             >
-              <span>No</span> <span className="font-mono">{market.no}%</span>
+              <span>No</span> <span className="font-mono">{no}%</span>
             </button>
           </>
         )}

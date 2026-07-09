@@ -1,150 +1,97 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+﻿import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://vichaar-backend.avhilakh.workers.dev');
 
 export default function Portfolio() {
   const navigate = useNavigate();
-  const [data, setData] = useState({ liquid_points: 0, positions: [] });
+  const [votes, setVotes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [claiming, setClaiming] = useState(false);
 
   useEffect(() => {
-    loadPortfolio();
+    loadVotes();
   }, []);
 
-  const loadPortfolio = async () => {
+  const loadVotes = async () => {
     try {
-      const userStr = localStorage.getItem("vichaarUser");
-      if (!userStr) {
-        navigate("/login");
-        return;
-      }
+      const userStr = localStorage.getItem('vichaarUser');
+      if (!userStr) { navigate('/login'); return; }
       const user = JSON.parse(userStr);
-
       const res = await fetch(`${API_URL}/api/user/portfolio/${user.user_id}`);
       const result = await res.json();
-      
-      if (result.success) {
-        setData({ liquid_points: result.liquid_points, positions: result.positions });
-      }
+      if (result.success) setVotes(result.votes || []);
     } catch (e) {
-      console.error("Failed to load portfolio", e);
+      console.error('Failed to load votes', e);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClaimBonus = async () => {
-    setClaiming(true);
-    try {
-      const userStr = localStorage.getItem("vichaarUser");
-      if (!userStr) return;
-      const user = JSON.parse(userStr);
+  const activeVotes = votes.filter(v => v.status === 'Active');
+  const resolvedVotes = votes.filter(v => v.status !== 'Active');
+  const correctCount = resolvedVotes.filter(v => v.isWinner === true).length;
+  const winRate = resolvedVotes.length > 0 ? Math.round((correctCount / resolvedVotes.length) * 100) : null;
 
-      const res = await fetch(`${API_URL}/api/user/claim-bonus`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: user.user_id })
-      });
-      const result = await res.json();
-
-      alert(result.message);
-      if (result.success) {
-        loadPortfolio(); // Refresh balance
-      }
-    } catch (e) {
-      console.error(e);
-
-      alert("Error claiming bonus");
-    } finally {
-      setClaiming(false);
-    }
-  };
-
-  const activePositions = data.positions.filter(p => p.status === 'Active');
-  const pastPositions = data.positions.filter(p => p.status !== 'Active');
-  const activePoints = activePositions.reduce((acc, pos) => acc + pos.amount, 0);
-  const totalValue = data.liquid_points + activePoints;
-
-  if (loading) return <div className="p-10 text-center text-slate-400">Loading Portfolio...</div>;
+  if (loading) return <div className="p-10 text-center text-slate-400">Loading your votes...</div>;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto w-full animate-fade-in-up">
-      
-      {/* Wallet Summary */}
-      <div className="bg-gradient-to-r from-green-900 to-slate-900 border border-green-500/20 p-8 rounded-2xl mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <div>
-          <p className="text-slate-400 text-sm uppercase tracking-widest">Total Portfolio Value</p>
-          <h1 className="text-5xl font-bold text-white mt-2 font-mono">₹{totalValue}</h1>
-          <p className="text-green-400 mt-2 font-semibold">Liquid: ₹{data.liquid_points} | Locked: ₹{activePoints}</p>
+    <div className="p-4 max-w-3xl mx-auto w-full">
+
+      {/* Header stats */}
+      <div className="bg-gradient-to-br from-[#111827] to-[#0f1115] border border-[#2a2e33] rounded-2xl p-6 mb-8">
+        <h1 className="text-3xl font-bold text-white mb-4">My Votes</h1>
+        <div className="flex gap-6 flex-wrap">
+          <div>
+            <p className="text-slate-400 text-xs uppercase tracking-wider">Total Votes</p>
+            <p className="text-3xl font-bold text-white mt-1">{votes.length}</p>
+          </div>
+          <div>
+            <p className="text-slate-400 text-xs uppercase tracking-wider">Win Rate</p>
+            <p className="text-3xl font-bold text-green-400 mt-1">{winRate !== null ? `${winRate}%` : '—'}</p>
+          </div>
+          <div>
+            <p className="text-slate-400 text-xs uppercase tracking-wider">Correct</p>
+            <p className="text-3xl font-bold text-white mt-1">{correctCount} / {resolvedVotes.length}</p>
+          </div>
         </div>
-        
-        <button 
-          onClick={handleClaimBonus}
-          disabled={claiming}
-          className="mt-6 sm:mt-0 bg-green-500 hover:bg-green-600 text-black font-bold py-3 px-6 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {claiming ? 'Claiming...' : 'Claim Daily Reward (50 Points)'}
-        </button>
       </div>
 
-      {/* Positions List */}
-      <h2 className="text-2xl font-bold text-white mb-6">Active Positions</h2>
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden mb-8">
-        {activePositions.length > 0 ? (
-          activePositions.map((pos) => (
-            <div key={pos.id} className="p-6 border-b border-slate-800 last:border-0 flex justify-between items-center hover:bg-slate-800/30 transition-colors">
-              <div>
-                <h3 className="font-semibold text-lg text-white">{pos.question}</h3>
-                <span className={`inline-block px-2 py-1 rounded text-xs font-bold mt-2 ${
-                  pos.type === 'YES' || pos.type === 'Yes' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                }`}>
-                  {pos.type}
-                </span>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-white font-mono">₹{pos.amount}</p>
-                <p className="text-xs text-blue-400">Active</p>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="p-10 text-center text-slate-500">No active positions yet.</p>
+      {/* Active Votes */}
+      <h2 className="text-xl font-bold text-white mb-4">Active Votes <span className="text-slate-500 font-normal text-base">({activeVotes.length})</span></h2>
+      <div className="bg-[#111317] border border-[#2a2e33] rounded-2xl overflow-hidden mb-8">
+        {activeVotes.length > 0 ? activeVotes.map(v => (
+          <Link to={`/market/${v.market_id}`} key={v.id} className="flex justify-between items-center p-4 border-b border-[#2a2e33] last:border-0 hover:bg-white/5 transition-colors">
+            <p className="text-white text-sm line-clamp-2 flex-1 pr-4">{v.question}</p>
+            <span className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${v.choice === 'Yes' || v.choice === 'YES' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+              {v.choice}
+            </span>
+          </Link>
+        )) : (
+          <p className="p-8 text-center text-slate-500">You have no active votes.</p>
         )}
       </div>
 
-      <h2 className="text-2xl font-bold text-white mb-6">Past Positions</h2>
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-        {pastPositions.length > 0 ? (
-          pastPositions.map((pos) => {
-            const isWinner = pos.type === pos.winning_outcome;
-            const isCancelled = pos.winning_outcome === null;
-            return (
-              <div key={pos.id} className="p-6 border-b border-slate-800 last:border-0 flex justify-between items-center hover:bg-slate-800/30 transition-colors opacity-75">
-                <div>
-                  <h3 className="font-semibold text-lg text-white">{pos.question}</h3>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${
-                      pos.type === 'YES' || pos.type === 'Yes' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                    }`}>
-                      {pos.type}
-                    </span>
-                    <span className={`text-xs font-bold ${isCancelled ? 'text-slate-400' : isWinner ? 'text-green-400' : 'text-red-400'}`}>
-                      {isCancelled ? 'Refunded' : isWinner ? 'Won' : 'Lost'}
-                    </span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-slate-400 font-mono line-through">₹{pos.amount}</p>
-                  <p className="text-xs text-slate-500">Resolved</p>
-                </div>
+      {/* Resolved Votes */}
+      <h2 className="text-xl font-bold text-white mb-4">Past Votes <span className="text-slate-500 font-normal text-base">({resolvedVotes.length})</span></h2>
+      <div className="bg-[#111317] border border-[#2a2e33] rounded-2xl overflow-hidden">
+        {resolvedVotes.length > 0 ? resolvedVotes.map(v => {
+          const isCancelled = v.winning_outcome === null;
+          const isCorrect = v.isWinner === true;
+          return (
+            <Link to={`/market/${v.market_id}`} key={v.id} className="flex justify-between items-center p-4 border-b border-[#2a2e33] last:border-0 hover:bg-white/5 transition-colors">
+              <div className="flex-1 pr-4">
+                <p className="text-white text-sm line-clamp-2">{v.question}</p>
+                <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold ${v.choice === 'Yes' || v.choice === 'YES' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                  Voted {v.choice}
+                </span>
               </div>
-            );
-          })
-        ) : (
-          <p className="p-10 text-center text-slate-500">No past positions yet.</p>
+              <span className={`shrink-0 text-xs font-bold px-3 py-1 rounded-full ${isCancelled ? 'bg-slate-700 text-slate-300' : isCorrect ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                {isCancelled ? 'Cancelled' : isCorrect ? 'Correct ✅' : 'Wrong ❌'}
+              </span>
+            </Link>
+          );
+        }) : (
+          <p className="p-8 text-center text-slate-500">No resolved votes yet.</p>
         )}
       </div>
     </div>

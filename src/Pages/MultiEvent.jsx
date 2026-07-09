@@ -1,30 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+﻿import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import { calculateSmoothedPercentages } from '../utils/marketUtils';
 import { Trophy, Info, Calendar } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://vichaar-backend.avhilakh.workers.dev');
 
 export default function MultiEvent() {
   const { event_id } = useParams();
   const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMarket, setSelectedMarket] = useState(null);
 
-  // Trade state
-  const [tradeType, setTradeType] = useState('YES');
-  const [amount, setAmount] = useState('');
-  const [tradeLoading, setTradeLoading] = useState(false);
+  // Votes state for the logged-in user
+  const [myVotes, setMyVotes] = useState({});
+  const [voteLoading, setVoteLoading] = useState(false);
 
   // Comments state
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [stableMarketId, setStableMarketId] = useState(null);
 
+  const currentUserStr = localStorage.getItem('vichaarUser');
+  const currentUser = currentUserStr ? JSON.parse(currentUserStr) : null;
+
   useEffect(() => {
     async function loadData() {
-      // e.g. event_id = world-cup-winner
       const searchString = `[GROUP:${event_id}]%`;
       const { data: ms, error } = await supabase
         .from("markets")
@@ -35,21 +35,32 @@ export default function MultiEvent() {
         const activeMs = ms.filter(m => m.status === 'Active');
         const formatted = (activeMs.length > 0 ? activeMs : ms).map(formatMarket).sort((a, b) => b.yesPrice - a.yesPrice);
         setMarkets(formatted);
-        setSelectedMarket(formatted[0]);
 
-        // Define a stable market ID for comments (smallest UUID)
         const stableId = [...formatted].sort((a, b) => a.id.localeCompare(b.id))[0].id;
         setStableMarketId(stableId);
 
-        // Load comments
         try {
           const res = await fetch(`${API_URL}/api/comments/${stableId}`);
           const data = await res.json();
           if (data.success) {
             setComments(data.comments);
           }
-        } catch (err) {
-          console.error(err);
+        } catch (err) { console.error(err); }
+
+        // Fetch my votes if logged in
+        if (currentUser) {
+           const marketIds = formatted.map(m => m.id);
+           const { data: votesData } = await supabase
+             .from('votes')
+             .select('market_id, choice')
+             .eq('user_id', currentUser.user_id)
+             .in('market_id', marketIds);
+
+           if (votesData) {
+             const voteMap = {};
+             votesData.forEach(v => voteMap[v.market_id] = v.choice);
+             setMyVotes(voteMap);
+           }
         }
       }
       setLoading(false);
@@ -61,7 +72,6 @@ export default function MultiEvent() {
   useEffect(() => {
     if (!stableMarketId) return;
 
-    // Subscribe to comments
     const commentSub = supabase
       .channel(`comments_event_${stableMarketId}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments', filter: `market_id=eq.${stableMarketId}` }, async (payload) => {
@@ -89,88 +99,43 @@ export default function MultiEvent() {
   }, [stableMarketId]);
 
   const formatMarket = (m) => {
-    const total = m.house_yes_points + m.house_no_points;
-    const yes = total > 0 ? (m.house_yes_points / total) : 0.5;
-    const no = total > 0 ? (m.house_no_points / total) : 0.5;
+    const { yes, no, totalVotes } = calculateSmoothedPercentages(m.house_yes_points, m.house_no_points);
     
-    // Parse name from "[GROUP:world-cup-winner] France"
     const nameMatch = m.question.match(/\] (.*)$/);
     const optionName = nameMatch ? nameMatch[1] : m.question;
-
-    let displayCategory = m.category;
-    const q = (m.question || '').toLowerCase();
-    
-    // Override category for bypassed markets
-    if (displayCategory === 'Politics') {
-      if (q.includes('gdp') || q.includes('inflation') || q.includes('unemployment') || q.includes('current account') || q.includes('mandi') || q.includes('gst') || q.includes('nhai') || q.includes('pm-kisan')) {
-        displayCategory = 'Economics';
-      } else if (q.includes('btc') || q.includes('bitcoin') || q.includes('eth') || q.includes('ethereum')) {
-        displayCategory = 'Crypto';
-      } else if (q.includes('spy') || q.includes('tsla') || q.includes('tesla') || q.includes('aapl') || q.includes('apple') || q.includes('rbi') || q.includes('interest rate')) {
-        displayCategory = 'Finance';
-      } else if (q.includes('spaceflight') || q.includes('science') || q.includes('launch')) {
-        displayCategory = 'Science';
-      } else if (q.includes('temperature') || q.includes('precipitation')) {
-        displayCategory = 'Weather';
-      } else if (q.includes('sports') || q.includes('football') || q.includes('cricket') || q.match(/\[group:(.*?)-vs-(.*?)\]/)) {
-        displayCategory = 'Sports';
-      }
-    }
 
     return {
       id: m.market_id,
       name: optionName,
-      category: displayCategory,
-      yesPrice: Math.round(yes * 100),
-      noPrice: Math.round(no * 100),
-      yesMultiplier: (1 / yes).toFixed(2),
-      noMultiplier: (1 / no).toFixed(2),
-      totalVolume: total,
+      yesPrice: yes,
+      noPrice: no,
+      totalVotes: totalVotes,
       image_url: m.image_url,
-      end_date: m.end_date
+      end_date: m.end_date,
+      status: m.status,
+      winning_outcome: m.winning_outcome
     };
   };
 
-  const handleOrder = async () => {
-    if (!amount || amount <= 0 || !selectedMarket) return;
-    setTradeLoading(true);
+  const handleVote = async (marketId, choice) => {
+    if (!currentUser) { alert("Please login to vote."); return; }
+    setVoteLoading(true);
     try {
-      const userStr = localStorage.getItem("vichaarUser");
-      if (!userStr) throw new Error("Please login to trade.");
-      const user = JSON.parse(userStr);
-
       const res = await fetch(`${API_URL}/api/markets/vote`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: user.user_id,
-          market_id: selectedMarket.id,
-          choice: tradeType,
-          amount: parseInt(amount)
-        })
+        body: JSON.stringify({ user_id: currentUser.user_id, market_id: marketId, choice })
       });
 
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message);
       
-      alert(`Successfully placed order on ${selectedMarket.name}!`);
-      setAmount('');
-      
-      // Update local state temporarily
-      setMarkets(prev => prev.map(m => {
-        if (m.id === selectedMarket.id) {
-           return {
-             ...m,
-             totalVolume: m.totalVolume + parseInt(amount)
-           };
-        }
-        return m;
-      }));
-      
+      setMyVotes(prev => ({ ...prev, [marketId]: choice }));
+      setMarkets(prev => prev.map(m => m.id === marketId ? { ...m, totalVotes: m.totalVotes + 1 } : m));
     } catch (err) {
       alert(err.message);
     } finally {
-      setTradeLoading(false);
+      setVoteLoading(false);
     }
   };
 
@@ -179,18 +144,11 @@ export default function MultiEvent() {
     if (!newComment.trim() || !stableMarketId) return;
 
     try {
-      const userStr = localStorage.getItem("vichaarUser");
-      if (!userStr) throw new Error("Please login to comment.");
-      const user = JSON.parse(userStr);
-
+      if (!currentUser) throw new Error("Please login to comment.");
       const res = await fetch(`${API_URL}/api/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: user.user_id,
-          market_id: stableMarketId,
-          content: newComment
-        })
+        body: JSON.stringify({ user_id: currentUser.user_id, market_id: stableMarketId, content: newComment })
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.message);
@@ -204,16 +162,12 @@ export default function MultiEvent() {
   if (markets.length === 0) return <div className="p-10 text-center text-red-500">Event not found</div>;
 
   const title = event_id.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-  const totalEventVolume = markets.reduce((acc, m) => acc + m.totalVolume, 0);
-
-  const potentialPayout = amount && selectedMarket ? 
-    (tradeType === 'YES' ? (amount * parseFloat(selectedMarket.yesMultiplier)).toFixed(2) : (amount * parseFloat(selectedMarket.noMultiplier)).toFixed(2)) 
-    : 0;
+  const totalEventVotes = markets.reduce((acc, m) => acc + m.totalVotes, 0);
 
   return (
     <div className="p-6 max-w-7xl mx-auto w-full animate-fade-in-up grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20">
       
-      {/* Left Column: Chart & Options List */}
+      {/* Left Column: List */}
       <div className="lg:col-span-2 flex flex-col gap-6">
         
         {/* Header */}
@@ -237,174 +191,118 @@ export default function MultiEvent() {
           )}
         </div>
         
-
-
         {/* Options List */}
         <div className="bg-[#111317] border border-[#2a2e33] rounded-2xl overflow-hidden mt-4">
           
-          <div className="flex justify-between items-center p-4 border-b border-[#2a2e33] text-sm text-gray-400 font-bold">
+          <div className="flex justify-between items-center p-4 border-b border-[#2a2e33] text-sm text-gray-400 font-bold bg-[#0d0f12]">
             <div className="flex items-center gap-2">
-              <span>${(totalEventVolume).toLocaleString()} Vol.</span>
+              <span>{totalEventVotes} Total Votes</span>
             </div>
-            <div className="flex gap-16 pr-4">
-               <span>Buy Yes</span>
-               <span>Buy No</span>
+            <div className="hidden sm:flex gap-16 pr-4">
+               <span>Vote</span>
             </div>
           </div>
 
           <div className="flex flex-col">
-            {markets.map(market => (
-              <div 
-                key={market.id} 
-                onClick={() => setSelectedMarket(market)}
-                className={`flex justify-between items-center p-4 border-b border-[#2a2e33]/50 cursor-pointer transition-colors ${selectedMarket?.id === market.id ? 'bg-[#1a1d24]' : 'hover:bg-[#16181d]'}`}
-              >
-                <div className="flex items-center gap-4">
-                  <img src={market.image_url || `https://ui-avatars.com/api/?name=${market.name}&background=random`} alt={market.name} className="w-8 h-8 rounded-full border border-[#2a2e33]" />
-                  <div>
-                    <div className="font-bold text-white text-lg">{market.name}</div>
-                    <div className="text-xs text-gray-500 font-mono">${(market.totalVolume).toLocaleString()} Vol.</div>
+            {markets.map((market, index) => {
+              const isClosed = market.status === 'Resolved' || new Date(market.end_date) < new Date();
+              const votedChoice = myVotes[market.id];
+
+              return (
+                <div 
+                  key={market.id} 
+                  className={`flex justify-between items-center p-4 border-b border-[#2a2e33]/50 hover:bg-[#16181d] transition-colors`}
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <span className="text-slate-500 font-mono text-sm w-4">{index + 1}</span>
+                    <img src={market.image_url || `https://ui-avatars.com/api/?name=${market.name}&background=random`} alt={market.name} className="w-10 h-10 rounded-full border border-[#2a2e33]" />
+                    <div>
+                      <div className="font-bold text-white text-lg">{market.name}</div>
+                      <div className="text-xs text-gray-500">{market.totalVotes} votes cast</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6">
+                    <div className="flex flex-col items-center">
+                      <div className="text-sm font-bold text-green-400">Y {market.yesPrice}%</div>
+                      <div className="text-sm font-bold text-red-400">N {market.noPrice}%</div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      {votedChoice ? (
+                         <div className={`flex items-center justify-center font-bold px-4 py-2 rounded-lg text-sm border ${votedChoice === 'YES' ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'}`}>
+                           Voted {votedChoice}
+                         </div>
+                      ) : market.status === 'Resolved' ? (
+                        <div className={`flex items-center justify-center font-bold px-4 py-2 rounded-lg text-sm ${
+                          market.winning_outcome === 'YES' ? 'bg-green-500/20 text-green-400' :
+                          market.winning_outcome === 'NO' ? 'bg-red-500/20 text-red-400' : 'bg-slate-700/50 text-slate-400'
+                        }`}>
+                          {market.winning_outcome ? `Resolved: ${market.winning_outcome}` : 'Cancelled'}
+                        </div>
+                      ) : isClosed ? (
+                        <div className="flex items-center justify-center font-bold px-4 py-2 rounded-lg bg-slate-800/50 text-slate-400 text-sm border border-slate-700">
+                          Closed
+                        </div>
+                      ) : (
+                        <>
+                          <button onClick={() => handleVote(market.id, 'YES')} disabled={voteLoading} className="bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 font-bold px-4 py-2 rounded-lg min-w-[60px] transition-colors disabled:opacity-50">
+                            YES
+                          </button>
+                          <button onClick={() => handleVote(market.id, 'NO')} disabled={voteLoading} className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-bold px-4 py-2 rounded-lg min-w-[60px] transition-colors disabled:opacity-50">
+                            NO
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-6">
-                  {/* Probability */}
-                  <div className="text-xl font-bold text-white w-16 text-right">
-                    {market.yesPrice}%
-                  </div>
-                  
-                  {/* Buy Yes Button */}
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setSelectedMarket(market); setTradeType('YES'); }}
-                    className="w-24 py-2 bg-[#00c853]/10 hover:bg-[#00c853]/20 border border-[#00c853]/30 text-[#00c853] font-bold rounded flex flex-col items-center justify-center transition-colors"
-                  >
-                    <span className="text-xs">Buy Yes</span>
-                    <span className="font-mono">{market.yesPrice}%</span>
-                  </button>
-
-                  {/* Buy No Button */}
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setSelectedMarket(market); setTradeType('NO'); }}
-                    className="w-24 py-2 bg-[#ff3b30]/10 hover:bg-[#ff3b30]/20 border border-[#ff3b30]/30 text-[#ff3b30] font-bold rounded flex flex-col items-center justify-center transition-colors"
-                  >
-                    <span className="text-xs">Buy No</span>
-                    <span className="font-mono">{market.noPrice}%</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
+      </div>
 
-        {/* Comment Section */}
-        <div className="bg-[#111317] border border-[#2a2e33] rounded-2xl p-6 mt-4">
-          <h2 className="text-xl font-bold text-white mb-4">Event Discussion</h2>
-          
-          <form onSubmit={submitComment} className="flex gap-4 mb-8">
+      {/* Comment Section */}
+      <div className="lg:col-span-1">
+        <div className="bg-[#111317] border border-[#2a2e33] rounded-2xl p-6 sticky top-6">
+          <h2 className="text-lg font-bold text-white mb-4">Discussion</h2>
+          <form onSubmit={submitComment} className="flex gap-2 mb-6">
             <input 
               type="text" 
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="What are your thoughts on this event?" 
-              className="flex-grow bg-[#16181d] border border-[#2a2e33] rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[#00c853] transition-colors"
+              value={newComment} 
+              onChange={(e) => setNewComment(e.target.value)} 
+              placeholder={`Discuss ${title}...`} 
+              disabled={!currentUser}
+              className="flex-grow min-w-0 bg-[#16181d] border border-[#2a2e33] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-green-500 transition-colors disabled:opacity-50"
             />
-            <button type="submit" className="bg-[#2a2e33] hover:bg-[#3a3f45] text-white font-bold px-6 rounded-lg transition-colors border border-[#3a3f45]">
+            <button type="submit" disabled={!currentUser} className="shrink-0 bg-[#2a2e33] hover:bg-[#3a3f45] text-white text-sm font-bold px-4 rounded-lg transition-colors disabled:opacity-50">
               Post
             </button>
           </form>
 
           <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
             {comments.length === 0 ? (
-              <p className="text-slate-500 text-center py-4">No comments yet. Start the debate!</p>
+              <p className="text-slate-500 text-center py-4 text-sm">No comments yet. Start the debate!</p>
             ) : comments.map(c => (
-              <div key={c.id} className="flex gap-4">
-                <div className="w-10 h-10 rounded-full bg-[#1a1d24] flex items-center justify-center text-[#00c853] font-bold border border-[#2a2e33] uppercase shrink-0">
+              <div key={c.id} className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-[#1a1d24] flex items-center justify-center text-green-400 font-bold border border-[#2a2e33] uppercase shrink-0 text-xs">
                   {c.display_name.charAt(0)}
                 </div>
                 <div>
                   <div className="flex items-baseline gap-2">
-                    <span className="font-bold text-white">{c.display_name}</span>
-                    <span className="text-xs text-slate-500">
+                    <span className="font-bold text-white text-sm">{c.display_name}</span>
+                    <span className="text-[10px] text-slate-500">
                       {new Date(c.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
                     </span>
                   </div>
-                  <p className="text-slate-300 mt-1">{c.content}</p>
+                  <p className="text-slate-300 mt-1 text-sm">{c.content}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
-
       </div>
-
-      {/* Right Column: Trade Slip */}
-      <div className="lg:col-span-1">
-        {selectedMarket && (
-          <div className="bg-[#111317] border border-[#2a2e33] rounded-2xl p-6 sticky top-6 shadow-xl">
-            
-            {/* Selected Option Header */}
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-[#2a2e33]">
-              <img src={selectedMarket.image_url || `https://ui-avatars.com/api/?name=${selectedMarket.name}&background=random`} className="w-10 h-10 rounded-full" alt="selected" />
-              <div>
-                <div className="text-xs text-gray-500 font-bold uppercase">{title}</div>
-                <div className="text-xl font-bold text-white">{selectedMarket.name}</div>
-              </div>
-            </div>
-            
-            <div className="flex gap-2 mb-6 bg-[#1a1d24] p-1 rounded-lg border border-[#2a2e33]">
-              <button 
-                onClick={() => setTradeType('YES')}
-                className={`flex-1 py-2 rounded-md font-bold transition-all ${tradeType === 'YES' ? 'bg-[#00c853] text-black shadow-lg shadow-[#00c853]/20' : 'text-slate-400 hover:text-white'}`}
-              >
-                YES {selectedMarket.yesPrice}%
-              </button>
-              <button 
-                onClick={() => setTradeType('NO')}
-                className={`flex-1 py-2 rounded-md font-bold transition-all ${tradeType === 'NO' ? 'bg-[#ff3b30] text-white shadow-lg shadow-[#ff3b30]/20' : 'text-slate-400 hover:text-white'}`}
-              >
-                NO {selectedMarket.noPrice}%
-              </button>
-            </div>
-
-            <div className="mb-6 bg-[#16181d] rounded-lg p-3 flex items-center border border-[#2a2e33] focus-within:border-blue-500 transition-colors">
-              <span className="text-gray-400 text-sm font-bold mr-2">$</span>
-              <input 
-                type="number" 
-                placeholder="Amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="bg-transparent border-none text-white w-full text-lg font-mono focus:outline-none placeholder-gray-600"
-              />
-            </div>
-
-            <div className="space-y-3 mb-6 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Odds</span>
-                <span className="text-white font-mono">{tradeType === 'YES' ? selectedMarket.yesMultiplier : selectedMarket.noMultiplier}x</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Potential Payout</span>
-                <span className="text-[#00c853] font-bold font-mono text-lg flex items-center gap-1">
-                  ${potentialPayout}
-                </span>
-              </div>
-            </div>
-
-            <button 
-              onClick={handleOrder}
-              disabled={tradeLoading || !amount || amount <= 0 || (selectedMarket.end_date && new Date(selectedMarket.end_date) < new Date())}
-              className={`w-full py-3 rounded-lg font-bold text-lg transition-colors disabled:opacity-50 ${
-                (selectedMarket.end_date && new Date(selectedMarket.end_date) < new Date()) ? 'bg-slate-700 text-slate-400' :
-                tradeType === 'YES' ? 'bg-[#00c853] hover:bg-[#00e676] text-black' : 'bg-[#ff3b30] hover:bg-[#ff453a] text-white'
-              }`}
-            >
-              {(selectedMarket.end_date && new Date(selectedMarket.end_date) < new Date()) ? 'Market Closed' : tradeLoading ? 'Processing...' : 'Trade'}
-            </button>
-            <p className="text-center text-[10px] text-gray-500 mt-4">By trading, you agree to the Terms of Use.</p>
-          </div>
-        )}
-      </div>
-
     </div>
   );
 }

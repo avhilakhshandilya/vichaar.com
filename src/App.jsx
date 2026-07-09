@@ -12,10 +12,9 @@ import Login from "./Pages/Login";
 import Portfolio from "./Pages/Portfolio";
 import UserProfile from "./Pages/UserProfile";
 import Market from "./Pages/Market";
-import Admin from "./Pages/Admin";
+
 import Sports from "./Pages/Sports";
 import Settings from "./Pages/Settings";
-import Rewards from "./Pages/Rewards";
 import LiveActivity from "./Pages/LiveActivity";
 import Notifications from "./Pages/Notifications";
 import MultiEvent from "./Pages/MultiEvent";
@@ -40,10 +39,9 @@ function App() {
             <Route path="/user/:username" element={<UserProfile />} />
             <Route path="/market/:market_id" element={<Market />} />
             <Route path="/event/:event_id" element={<MultiEvent />} />
-            <Route path="/admin" element={<Admin />} />
+
             <Route path="/sports" element={<Sports />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/rewards" element={<Rewards />} />
             <Route path="/live" element={<LiveActivity />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/about" element={<About />} />

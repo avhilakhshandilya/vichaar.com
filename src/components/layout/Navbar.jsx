@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Settings, Bell } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
+const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://vichaar-backend.avhilakh.workers.dev');
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -89,10 +88,6 @@ export default function Navbar() {
                 )}
               </Link>
               
-              <Link to="/rewards" className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-full text-slate-200 font-bold transition-colors">
-                <span className="text-green-400">●</span> {user.total_points || 0}
-              </Link>
-              
               <div className="hidden md:flex items-center gap-3 bg-slate-800 rounded-full pl-2 pr-4 py-1">
                 <Link to={`/user/${user.username}`} className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold hover:opacity-80 transition-opacity">
                   {user.display_name?.charAt(0).toUpperCase()}
@@ -122,7 +117,14 @@ export default function Navbar() {
       {/* Bottom Tier: Categories */}
       <div className="flex items-center gap-6 px-6 py-3 border-t border-[#2a2e33]/50 overflow-x-auto whitespace-nowrap text-slate-400 text-xs font-bold uppercase tracking-wider custom-scrollbar">
         <span onClick={() => handleCategory('Trending')} className="hover:text-white cursor-pointer transition-colors">Trending</span>
-        <span onClick={() => handleCategory('Weather')} className="hover:text-slate-200 cursor-pointer">Weather</span>
+        <span onClick={() => handleCategory('Breaking')} className="text-red-400 hover:text-red-300 cursor-pointer transition-colors flex items-center gap-1"><span className="animate-pulse w-2 h-2 bg-red-500 rounded-full inline-block"></span>Breaking</span>
+        <span onClick={() => handleCategory('Economics')} className="hover:text-slate-200 cursor-pointer transition-colors">Economics</span>
+        <span onClick={() => handleCategory('Weather')} className="hover:text-slate-200 cursor-pointer transition-colors">Weather</span>
+        <span onClick={() => handleCategory('Sports')} className="hover:text-slate-200 cursor-pointer transition-colors">Sports</span>
+        <span onClick={() => handleCategory('Elections')} className="hover:text-slate-200 cursor-pointer transition-colors">Elections</span>
+        <span onClick={() => handleCategory('Crypto')} className="hover:text-slate-200 cursor-pointer transition-colors">Crypto</span>
+        <span onClick={() => handleCategory('Science')} className="hover:text-slate-200 cursor-pointer transition-colors">Science</span>
+        <span onClick={() => handleCategory('Culture')} className="hover:text-slate-200 cursor-pointer transition-colors">Culture</span>
       </div>
     </nav>
   );

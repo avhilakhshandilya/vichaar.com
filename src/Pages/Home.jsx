@@ -1,26 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import SportsMatchRow from "../components/market/SportsMatchRow";
 import MarketCard from "../components/market/MarketCard";
 import MultiMarketCard from "../components/market/MultiMarketCard";
 
 import ActivityFeed from "../components/ActivityFeed";
 import { getMarkets } from "../services/marketService";
-import { groupMarkets } from "../utils/marketUtils";
+import { groupMarkets, calculateSmoothedPercentages } from "../utils/marketUtils";
 import { supabase } from "../services/supabase";
 import { Trophy } from 'lucide-react';
 
 function Home() {
   const navigate = useNavigate();
   const [markets, setMarkets] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('Active');
 
   useEffect(() => {
     async function loadMarkets() {
       const data = await getMarkets();
+      const now = new Date();
       const formattedMarkets = data
-        .map(formatMarket)
-        .filter(m => m.category === 'Weather'); // Only keep Weather markets
+        .filter(m => m.status === 'Active' && new Date(m.end_date) > now)
+        .map(formatMarket);
       setMarkets(formattedMarkets);
     }
   
@@ -44,14 +43,15 @@ function Home() {
   }, []);
 
   const formatMarket = (market) => {
-    const total = market.house_yes_points + market.house_no_points;
-    const yes = total > 0 ? Math.round((market.house_yes_points / total) * 100) : 50;
+    const { yes, no, totalVotes } = calculateSmoothedPercentages(market.house_yes_points, market.house_no_points);
     
     let displayCategory = market.category;
     const q = (market.question || '').toLowerCase();
     
     // Override category for bypassed markets
-    if (displayCategory === 'Politics') {
+    if (q.startsWith('[breaking]')) {
+      displayCategory = 'Breaking';
+    } else if (displayCategory === 'Politics') {
       if (q.includes('gdp') || q.includes('inflation') || q.includes('cpi') || q.includes('unemployment') || q.includes('current account') || q.includes('gst') || q.includes('budget') || q.includes('tax') || q.includes('pm-kisan') || q.includes('economy') || q.includes('fed') || q.includes('reserve') || q.includes('jobs') || q.includes('stock') || q.includes('market') || q.includes('trade')) {
         displayCategory = 'Economics';
       } else if (q.includes('btc') || q.includes('bitcoin') || q.includes('eth') || q.includes('ethereum')) {
@@ -77,7 +77,8 @@ function Home() {
       question: market.question,
       category: displayCategory,
       yes,
-      no: 100 - yes,
+      no,
+      totalVotes,
       image_url: market.image_url,
     };
   };
@@ -102,13 +103,6 @@ function Home() {
     displayedMarkets = displayedMarkets.filter(m => m.question.toLowerCase().includes(query.toLowerCase()));
   }
 
-  const now = new Date();
-  if (statusFilter === 'Active') {
-    displayedMarkets = displayedMarkets.filter(m => m.status === 'Active' && new Date(m.end_date) > now);
-  } else if (statusFilter === 'Past') {
-    displayedMarkets = displayedMarkets.filter(m => m.status === 'Resolved' || m.status === 'CANCEL' || new Date(m.end_date) <= now);
-  }
-
   let groupedMarkets = groupMarkets(displayedMarkets);
   if (category && category.toLowerCase() === 'trending') {
     groupedMarkets.sort((a, b) => {
@@ -128,20 +122,8 @@ function Home() {
     <div className="bg-[#0f1115] text-white min-h-screen pb-10">
       
       {/* Main Content Area */}
-      <div className="max-w-7xl mx-auto px-6 flex flex-col gap-8 pt-6">
+      <div className="max-w-7xl mx-auto px-6 flex flex-col gap-8">
         
-        <div className="flex justify-between items-center mb-2">
-          <h1 className="text-2xl font-bold text-white">{statusFilter === 'Active' ? 'Active Markets' : 'Past Markets'}</h1>
-          <select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-[#16181d] border border-[#2a2e33] text-white px-4 py-2 text-sm font-bold rounded-lg focus:outline-none focus:border-blue-500 transition-colors cursor-pointer"
-          >
-            <option value="Active">Active</option>
-            <option value="Past">Past</option>
-          </select>
-        </div>
-
         {/* Left Column (Featured Market + Grid) */}
         <div className="w-full flex flex-col gap-6">
           
