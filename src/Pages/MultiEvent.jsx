@@ -203,8 +203,8 @@ export default function MultiEvent() {
   }
   const totalEventVotes = markets.reduce((acc, m) => acc + m.totalVotes, 0);
   let bannerUrl = markets[0]?.image_url;
-  if (event_id && event_id.toLowerCase().includes('goaelection')) {
-     bannerUrl = 'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?q=80&w=1200&auto=format&fit=crop';
+  if (event_id && event_id.toLowerCase().includes('election')) {
+     bannerUrl = 'https://images.unsplash.com/photo-1532210317995-cc56d90177d9?q=80&w=1200&auto=format&fit=crop';
   }
   const description = markets[0]?.description;
   const displayCategory = markets[0]?.category || 'Multiple Choice';
@@ -277,7 +277,7 @@ export default function MultiEvent() {
                 >
                   <div className="flex items-center gap-3 sm:gap-4 flex-1">
                     <span className="text-slate-500 font-mono text-sm w-4 shrink-0">{index + 1}</span>
-                    <img src={market.image_url || `https://ui-avatars.com/api/?name=${market.name}&background=random`} alt={market.name} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#2a2e33] shrink-0" />
+                    <img src={market.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(market.name.match(/\(([^)]+)\)/) ? market.name.match(/\(([^)]+)\)/)[1] : market.name)}&background=random`} alt={market.name} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#2a2e33] shrink-0" />
                     <div>
                       <div className="font-bold text-white text-base sm:text-lg leading-tight">{market.name}</div>
                       <div className="text-xs text-gray-500 mt-0.5">{market.totalVotes} votes cast</div>
