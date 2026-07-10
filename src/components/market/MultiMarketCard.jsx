@@ -1,6 +1,22 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { calculateSmoothedPercentages } from '../../utils/marketUtils';
+
+function getCategoryBanner(imageUrl, category) {
+  if (imageUrl && !imageUrl.includes('ui-avatars.com')) return imageUrl;
+  const keywords = {
+    Breaking: 'breaking+news+newspaper',
+    Economics: 'economy+finance+charts',
+    Weather: 'weather+clouds+sky',
+    Sports: 'sports+stadium',
+    Crypto: 'cryptocurrency+bitcoin',
+    Science: 'science+space',
+    Culture: 'culture+art',
+    Elections: 'election+vote',
+  };
+  const kw = keywords[category] || 'news+event';
+  return `https://source.unsplash.com/400x200/?${kw}`;
+}
 
 export default function MultiMarketCard({ group }) {
   const navigate = useNavigate();
@@ -10,57 +26,111 @@ export default function MultiMarketCard({ group }) {
     navigate(`/multi/${group.id}`);
   };
 
-  // Sort options by "yes" chance descending
-  const sortedOptions = [...group.options].sort((a, b) => {
-    const aPct = calculateSmoothedPercentages(a.house_yes_points, a.house_no_points).yes;
-    const bPct = calculateSmoothedPercentages(b.house_yes_points, b.house_no_points).yes;
-    return bPct - aPct;
-  });
+  const handleRowClick = (e, optionId) => {
+    e.stopPropagation();
+    navigate(`/market/${optionId}`);
+  };
 
-  const totalGroupVotes = group.options.reduce((sum, opt) => sum + calculateSmoothedPercentages(opt.house_yes_points, opt.house_no_points).totalVotes, 0);
+  const totalGroupVotes = group.options.reduce(
+    (sum, opt) => sum + calculateSmoothedPercentages(opt.house_yes_points, opt.house_no_points).totalVotes,
+    0
+  );
+
+  const bannerUrl = getCategoryBanner(group.image_url, group.category);
+  const displayCategory = group.category === 'Politics' ? 'Breaking' : (group.category || 'Multi');
 
   return (
-    <div 
+    <div
       onClick={handleClick}
-      className="bg-[#111317] border border-[#2a2e33] hover:border-[#3a3f45] transition-colors rounded-2xl p-5 flex flex-col group cursor-pointer"
+      className="bg-[#111317] border border-[#2a2e33] hover:border-[#3a3f45] transition-all rounded-2xl overflow-hidden flex flex-col cursor-pointer hover:shadow-lg hover:shadow-black/30 hover:-translate-y-0.5 group"
     >
-      <div className="flex gap-4 items-center mb-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-[#2a2e33] flex items-center justify-center shrink-0">
-          <span className="text-xl">🏆</span>
+      {/* Banner Image */}
+      <div className="relative w-full h-36 overflow-hidden">
+        <img
+          src={bannerUrl}
+          alt={group.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          onError={(e) => {
+            e.target.src = `https://ui-avatars.com/api/?name=${group.title}&background=1a1d23&color=fff&size=400`;
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111317] via-[#111317]/40 to-transparent" />
+
+        {/* Category badge */}
+        <div className="absolute top-3 left-3">
+          <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#111317]/80 backdrop-blur-sm border border-red-500/30 text-red-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            {displayCategory}
+          </span>
         </div>
-        <div className="flex flex-col">
-          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Multiple Choice</span>
-          <span className="text-xs text-indigo-400 font-bold">{group.options.length} Options</span>
+
+        {/* Multi-date badge */}
+        <div className="absolute top-3 right-3">
+          <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-[#111317]/80 backdrop-blur-sm border border-[#2a2e33] text-slate-400">
+            {group.options.length} dates
+          </span>
         </div>
       </div>
-      
-      <h2 className="text-lg font-bold text-white mb-4 line-clamp-2 group-hover:text-white/80 transition-colors">
-        {group.title}
-      </h2>
-      
-      <div className="flex flex-col gap-2 mb-4 flex-1">
-        {sortedOptions.slice(0, 3).map((opt, idx) => {
-          const { yes } = calculateSmoothedPercentages(opt.house_yes_points, opt.house_no_points);
-          return (
-            <div key={opt.id} className="flex items-center justify-between text-sm bg-[#16181d] px-3 py-2 rounded-lg border border-[#2a2e33]">
-              <div className="flex items-center gap-2 truncate">
-                <span className="text-gray-500 font-mono text-xs">#{idx + 1}</span>
-                <span className="text-gray-300 truncate">{opt.name}</span>
+
+      {/* Content */}
+      <div className="p-4 flex flex-col flex-1">
+        {/* Title */}
+        <h2 className="text-sm font-semibold text-white mb-3 line-clamp-2 leading-snug group-hover:text-white/80 transition-colors">
+          {group.title.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+        </h2>
+
+        {/* Date rows — Polymarket style */}
+        <div className="flex flex-col gap-2 flex-1">
+          {group.options.map((opt) => {
+            const { yes, no, totalVotes } = calculateSmoothedPercentages(opt.house_yes_points, opt.house_no_points);
+            const label = opt.optionName || opt.name || opt.question;
+            const endDate = opt.end_date ? new Date(opt.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+            const isExpired = opt.end_date && new Date(opt.end_date) < new Date();
+
+            return (
+              <div
+                key={opt.market_id || opt.id}
+                onClick={(e) => handleRowClick(e, opt.market_id || opt.id)}
+                className="flex items-center gap-2 p-2.5 rounded-xl border border-[#2a2e33] hover:border-[#3a3f45] bg-[#0f1115] transition-colors"
+              >
+                {/* Date label */}
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-bold text-slate-300 truncate">{label}</div>
+                  <div className="text-[10px] text-slate-500">{endDate} · {totalVotes} votes</div>
+                </div>
+
+                {/* Probability */}
+                <div className="text-sm font-bold text-[#00c853] shrink-0">{yes}%</div>
+
+                {/* Buttons */}
+                {isExpired ? (
+                  <div className="text-[10px] px-2 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 shrink-0">Ended</div>
+                ) : (
+                  <div className="flex gap-1 shrink-0">
+                    <button
+                      onClick={(e) => handleRowClick(e, opt.market_id || opt.id)}
+                      className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-[#00c853]/10 hover:bg-[#00c853]/20 text-[#00c853] border border-[#00c853]/30 transition-colors"
+                    >
+                      Yes
+                    </button>
+                    <button
+                      onClick={(e) => handleRowClick(e, opt.market_id || opt.id)}
+                      className="text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-[#ff3b30]/10 hover:bg-[#ff3b30]/20 text-[#ff3b30] border border-[#ff3b30]/30 transition-colors"
+                    >
+                      No
+                    </button>
+                  </div>
+                )}
               </div>
-              <span className="text-white font-bold shrink-0 ml-2">{yes}%</span>
-            </div>
-          );
-        })}
-        {sortedOptions.length > 3 && (
-          <div className="text-xs text-gray-500 text-center mt-1">
-            + {sortedOptions.length - 3} more options
-          </div>
-        )}
-      </div>
-      
-      <div className="flex items-center justify-between text-sm pt-4 border-t border-[#2a2e33] mt-auto">
-        <span className="text-gray-500 font-mono text-xs">{totalGroupVotes} Total Votes</span>
-        <span className="text-indigo-400 font-bold text-xs hover:underline">View All &rarr;</span>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-3 mt-2 border-t border-[#2a2e33] text-xs text-slate-500">
+          <span>{totalGroupVotes} total votes</span>
+          <span className="text-indigo-400 font-bold hover:underline">View All →</span>
+        </div>
       </div>
     </div>
   );
