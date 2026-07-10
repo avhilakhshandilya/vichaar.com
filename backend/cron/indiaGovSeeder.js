@@ -1,7 +1,7 @@
 import { supabase } from "../utils/supabase.js";
 import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
-const BASE_LIQUIDITY = 100;
+const BASE_LIQUIDITY = 50;
 
 async function seedIndiaGovMarkets() {
   console.log("🇮🇳 [Cron] Starting Indian Government Multi-Sector Seeder...");

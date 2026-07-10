@@ -2,7 +2,7 @@ import axios from "axios";
 import { supabase } from "../utils/supabase.js";
 import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
-const BASE_LIQUIDITY = 100;
+const BASE_LIQUIDITY = 50;
 
 async function seedCongressMarkets() {
   console.log("🏛️ [Cron] Starting Congress & Elections Market Seeder...");

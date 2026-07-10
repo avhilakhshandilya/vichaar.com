@@ -93,7 +93,7 @@ export const calculateSmoothedPercentages = (yesVotes, noVotes, smoothingFactor 
 
 export const getTrueVolume = (houseYes, houseNo) => {
   const total = (houseYes || 0) + (houseNo || 0);
-  // Base liquidity is now 100 across all markets
-  if (total >= 100) return total - 100;
+  // Base liquidity is now 50 across all markets
+  if (total >= 50) return total - 50;
   return total;
 };

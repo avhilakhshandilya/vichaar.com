@@ -108,8 +108,8 @@ Format exactly like this:
             ? `https://source.unsplash.com/400x200/?${encodeURIComponent(group.image_keyword)}`
             : `https://source.unsplash.com/400x200/?breaking+news+india`,
           status: 'Active',
-          house_yes_points: 50,
-          house_no_points: 50,
+          house_yes_points: 25,
+          house_no_points: 25,
           
           
           created_at: new Date().toISOString()

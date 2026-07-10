@@ -2,7 +2,7 @@ import yahooFinance from "yahoo-finance2";
 import { supabase } from "../utils/supabase.js";
 import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
-const BASE_LIQUIDITY = 100;
+const BASE_LIQUIDITY = 50;
 
 const ASSETS = [
   { symbol: 'SPY', name: 'S&P 500 ETF', isCrypto: false },

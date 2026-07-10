@@ -2,7 +2,7 @@ import axios from "axios";
 import { supabase } from "../utils/supabase.js";
 import { getImageForQuestion } from "../utils/imageHelper.js";
 
-const BASE_LIQUIDITY = 100;
+const BASE_LIQUIDITY = 50;
 const DATAGOV_API_KEY = process.env.DATAGOV_API_KEY;
 
 // Known Resource ID for Real time Air Quality Index
