@@ -1,10 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { calculateSmoothedPercentages } from '../../utils/marketUtils';
+import { calculateSmoothedPercentages, getTrueVolume } from '../../utils/marketUtils';
 
 export default function MarketCard({ market }) {
   const navigate = useNavigate();
   const { yes, no, totalVotes } = calculateSmoothedPercentages(market.house_yes_points, market.house_no_points);
+  const trueVolume = getTrueVolume(market.house_yes_points, market.house_no_points);
 
   const handleClick = (e) => {
     if (e) e.stopPropagation();
@@ -78,7 +79,7 @@ export default function MarketCard({ market }) {
       
       {/* Footer / Status */}
       <div className="flex items-center justify-between text-xs font-medium text-gray-500 mt-auto">
-        <span>{Math.max(0, totalVotes - 200).toLocaleString()} vol</span>
+        <span>{trueVolume.toLocaleString()} vol</span>
         
         {market.status === 'Resolved' ? (
           <span className={`font-bold uppercase tracking-wider ${market.winning_outcome === 'YES' ? 'text-[#00c853]' : market.winning_outcome === 'NO' ? 'text-[#ff3b30]' : 'text-slate-400'}`}>

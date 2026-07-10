@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
-import { calculateSmoothedPercentages } from '../utils/marketUtils';
+import { calculateSmoothedPercentages, getTrueVolume } from '../utils/marketUtils';
 import { Trophy, Info, Calendar } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'https://vichaar-backend.avhilakh.workers.dev');
 
 function formatMarket(m) {
   const { yes, no, totalVotes } = calculateSmoothedPercentages(m.house_yes_points, m.house_no_points);
+  const trueVolume = getTrueVolume(m.house_yes_points, m.house_no_points);
   
   const nameMatch = m.question.match(/\] (.*)$/);
   const optionName = nameMatch ? nameMatch[1] : m.question;
@@ -22,7 +23,7 @@ function formatMarket(m) {
     name: optionName,
     yesPrice: yes,
     noPrice: no,
-    totalVotes: totalVotes,
+    totalVotes: trueVolume,
     image_url: m.image_url,
     end_date: m.end_date,
     status: m.status,
@@ -178,7 +179,7 @@ export default function MultiEvent() {
   } else {
      title = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
   }
-  const totalEventVotes = markets.reduce((acc, m) => acc + Math.max(0, m.totalVotes - 200), 0);
+  const totalEventVotes = markets.reduce((acc, m) => acc + m.totalVotes, 0);
   const bannerUrl = markets[0]?.image_url;
   const description = markets[0]?.description;
   const displayCategory = markets[0]?.category || 'Multiple Choice';

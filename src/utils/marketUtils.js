@@ -90,3 +90,11 @@ export const calculateSmoothedPercentages = (yesVotes, noVotes, smoothingFactor 
   
   return { yes, no, totalVotes: (yesVotes || 0) + (noVotes || 0) };
 };
+
+export const getTrueVolume = (houseYes, houseNo) => {
+  const total = (houseYes || 0) + (houseNo || 0);
+  // All seeders use 10000 base liquidity, except Breaking which uses 0.
+  // If total is >= 10000, we subtract the 10000 base liquidity to get true user volume.
+  if (total >= 10000) return total - 10000;
+  return total;
+};

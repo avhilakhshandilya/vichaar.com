@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { calculateSmoothedPercentages } from '../../utils/marketUtils';
+import { calculateSmoothedPercentages, getTrueVolume } from '../../utils/marketUtils';
 
 export default function MultiMarketCard({ group }) {
   const navigate = useNavigate();
@@ -17,7 +17,7 @@ export default function MultiMarketCard({ group }) {
     return bPct - aPct;
   });
 
-  const totalGroupVotes = group.options.reduce((sum, opt) => sum + Math.max(0, calculateSmoothedPercentages(opt.house_yes_points, opt.house_no_points).totalVotes - 200), 0);
+  const totalGroupVotes = group.options.reduce((sum, opt) => sum + getTrueVolume(opt.house_yes_points, opt.house_no_points), 0);
 
   return (
     <div 
