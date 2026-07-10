@@ -22,45 +22,54 @@ export default function MultiMarketCard({ group }) {
   return (
     <div 
       onClick={handleClick}
-      className="bg-[#111317] border border-[#2a2e33] hover:border-[#3a3f45] transition-colors rounded-2xl p-5 flex flex-col group cursor-pointer"
+      className="bg-[#111317] border border-[#2a2e33] hover:border-[#3a3f45] transition-colors rounded-xl p-5 flex flex-col group cursor-pointer h-full"
     >
-      <div className="flex gap-4 items-center mb-4">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-[#2a2e33] flex items-center justify-center shrink-0">
-          <span className="text-xl">🏆</span>
-        </div>
-        <div className="flex flex-col">
-          <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Multiple Choice</span>
-          <span className="text-xs text-indigo-400 font-bold">{group.options.length} Options</span>
-        </div>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-4">
+        {group.image_url ? (
+          <img src={group.image_url} alt="" className="w-6 h-6 rounded object-cover" />
+        ) : (
+          <div className="w-6 h-6 rounded bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-[#2a2e33] flex items-center justify-center">
+            <span className="text-[10px]">🏆</span>
+          </div>
+        )}
+        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{group.category || 'Multiple Choice'}</span>
       </div>
       
-      <h2 className="text-lg font-bold text-white mb-4 line-clamp-2 group-hover:text-white/80 transition-colors">
+      {/* Title */}
+      <h2 className="text-[15px] font-bold text-white mb-6 line-clamp-2 leading-snug group-hover:text-white/90 transition-colors">
         {group.title}
       </h2>
       
-      <div className="flex flex-col gap-2 mb-4 flex-1">
-        {sortedOptions.slice(0, 3).map((opt, idx) => {
+      {/* Options */}
+      <div className="flex flex-col gap-5 mb-6 flex-1">
+        {sortedOptions.slice(0, 3).map((opt) => {
           const { yes } = calculateSmoothedPercentages(opt.house_yes_points, opt.house_no_points);
+          const multiplier = yes > 0 ? (100 / yes).toFixed(2) : "0.00";
           return (
-            <div key={opt.id} className="flex items-center justify-between text-sm bg-[#16181d] px-3 py-2 rounded-lg border border-[#2a2e33]">
-              <div className="flex items-center gap-2 truncate">
-                <span className="text-gray-500 font-mono text-xs">#{idx + 1}</span>
-                <span className="text-gray-300 truncate">{opt.name}</span>
+            <div key={opt.id} className="flex items-center justify-between group/row">
+              <div className="flex flex-col w-full mr-6">
+                <span className="text-[13px] text-gray-300 font-medium mb-2 truncate">{opt.name}</span>
+                {/* Progress bar line */}
+                <div className="h-[2px] bg-[#2a2e33] w-full rounded-full overflow-hidden">
+                  <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${yes}%` }} />
+                </div>
               </div>
-              <span className="text-white font-bold shrink-0 ml-2">{yes}%</span>
+              <div className="flex items-center gap-4 shrink-0 mt-1">
+                <span className="text-xs text-gray-400 font-mono">{multiplier}x</span>
+                <div className="px-3 py-1 rounded-full border border-teal-500/40 hover:bg-teal-500/10 transition-colors text-white text-[13px] font-bold w-[60px] text-center">
+                  {yes}%
+                </div>
+              </div>
             </div>
           );
         })}
-        {sortedOptions.length > 3 && (
-          <div className="text-xs text-gray-500 text-center mt-1">
-            + {sortedOptions.length - 3} more options
-          </div>
-        )}
       </div>
       
-      <div className="flex items-center justify-between text-sm pt-4 border-t border-[#2a2e33] mt-auto">
-        <span className="text-gray-500 font-mono text-xs">{totalGroupVotes} Total Votes</span>
-        <span className="text-indigo-400 font-bold text-xs hover:underline">View All &rarr;</span>
+      {/* Footer */}
+      <div className="flex items-center justify-between text-xs font-medium text-gray-500 mt-auto">
+        <span>{totalGroupVotes.toLocaleString()} vol</span>
+        <span>{group.options.length} markets</span>
       </div>
     </div>
   );
