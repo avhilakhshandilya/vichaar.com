@@ -21,7 +21,7 @@ export default function MarketCard({ market }) {
   return (
     <div 
       onClick={handleClick}
-      className="bg-[#111317] border border-[#2a2e33] hover:border-[#3a3f45] transition-colors rounded-xl p-5 flex flex-col group cursor-pointer h-full"
+      className="bg-[#111317] border border-[#2a2e33] hover:border-[#3a3f45] transition-colors rounded-xl p-5 flex flex-col group cursor-pointer h-[320px]"
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
