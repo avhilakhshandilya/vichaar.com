@@ -56,7 +56,7 @@ export async function seedDataGovMarkets() {
           targetDate.setDate(today.getDate() + (7 - today.getDay())); // Next Sunday
           const dateStr = targetDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-          const question = `Will ${city}'s AQI exceed ${threshold} by ${dateStr}?`;
+          const question = `${city} AQI above ${threshold} on ${dateStr}?`;
           
           const { data: existing } = await supabase
             .from('markets')
