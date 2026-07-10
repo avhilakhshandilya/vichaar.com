@@ -1,16 +1,16 @@
 import { supabase } from '../utils/supabase.js';
 import axios from 'axios';
-import Groq from 'groq-sdk';
+import { GoogleGenAI } from '@google/genai';
 
 export async function seedBreakingMarkets() {
-  console.log("🚀 [Cron] Starting Breaking News Seeder (Groq + GNews)...");
+  console.log("🚀 [Cron] Starting Breaking News Seeder (Gemini + GNews)...");
 
   try {
-    const groqKey = process.env.GROQ_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY;
     const gnewsKey = process.env.GNEWS_API_KEY;
     
-    if (!groqKey || !gnewsKey) {
-      throw new Error("Missing GROQ_API_KEY or GNEWS_API_KEY");
+    if (!geminiKey || !gnewsKey) {
+      throw new Error("Missing GEMINI_API_KEY or GNEWS_API_KEY");
     }
 
     // 1. Fetch Live Breaking News for India
@@ -25,8 +25,8 @@ export async function seedBreakingMarkets() {
 
     const newsSummary = articles.map(a => `- ${a.title}: ${a.description}`).join("\n");
     
-    // 2. Pass to Groq (Llama 3.3 70B) to generate markets
-    const groq = new Groq({ apiKey: groqKey });
+    // 2. Pass to Gemini to generate markets
+    const ai = new GoogleGenAI({ apiKey: geminiKey });
     
     const prompt = `You are a prediction market creator. I will provide you with the latest breaking news headlines and summaries from India.
 Read them and generate the top 2 most interesting prediction market topics that will resolve in the near future.
@@ -54,14 +54,13 @@ Format exactly like this:
   }
 ]`;
 
-    console.log("🧠 Asking Groq to generate grouped breaking markets...");
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.3,
+    console.log("🧠 Asking Gemini to generate grouped breaking markets...");
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
     });
 
-    let content = chatCompletion.choices[0]?.message?.content || "";
+    let content = response.text.trim();
     
     // Strip markdown formatting
     if (content.startsWith("```json")) content = content.slice(7);

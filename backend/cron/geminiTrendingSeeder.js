@@ -15,6 +15,8 @@ async function seedGeminiTrendingMarkets() {
     return;
   }
 
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
   let createdCount = 0;
 
   try {
