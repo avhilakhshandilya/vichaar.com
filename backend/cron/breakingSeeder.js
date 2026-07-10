@@ -80,13 +80,12 @@ Format exactly like this:
       const { error } = await supabase.from('markets').insert({
         question: question,
         description: m.description,
-        category: 'Breaking',
+        category: 'Politics',
         end_date: m.end_date,
         image_url: `https://ui-avatars.com/api/?name=Breaking&background=random&color=fff`,
         status: 'Active',
-        house_yes_points: 50,
-        house_no_points: 50,
-        source: 'perplexity_sonar',
+        house_yes_points: 0,
+        house_no_points: 0,
         created_at: new Date().toISOString()
       });
 
