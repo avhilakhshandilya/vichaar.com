@@ -202,7 +202,10 @@ export default function MultiEvent() {
      title = rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1);
   }
   const totalEventVotes = markets.reduce((acc, m) => acc + m.totalVotes, 0);
-  const bannerUrl = markets[0]?.image_url;
+  let bannerUrl = markets[0]?.image_url;
+  if (event_id && event_id.toLowerCase().includes('goaelection')) {
+     bannerUrl = 'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?q=80&w=1200&auto=format&fit=crop';
+  }
   const description = markets[0]?.description;
   const displayCategory = markets[0]?.category || 'Multiple Choice';
 
