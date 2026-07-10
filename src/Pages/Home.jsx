@@ -133,7 +133,7 @@ function Home() {
               No markets found matching your criteria.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {gridMarkets.map((item) => (
                 item.isGroup ? (
                   <MultiMarketCard key={item.id} group={item} />
