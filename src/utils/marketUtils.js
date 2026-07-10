@@ -56,7 +56,14 @@ export const groupMarkets = (markets) => {
       // If a meaningful common prefix exists (more than 10 chars), use it as the title
       if (commonPrefix.length > 10) {
         // Clean up trailing spaces or punctuation from the title
-        item.title = commonPrefix.replace(/(\s+by\s*|\s*by\s*$|\s+at\s*$|[\s?]+$)/i, '').trim() + '?';
+        let cleanedTitle = commonPrefix.replace(/(\s+by\s*|\s*by\s*$|\s+at\s*$|[\s]+$)/i, '').trim();
+        if (cleanedTitle.endsWith('?')) {
+           // It already has a question mark
+           item.title = cleanedTitle;
+        } else {
+           // Strip any trailing non-word chars and add the question mark
+           item.title = cleanedTitle.replace(/[\s?]+$/, '') + '?';
+        }
         
         // Strip the common prefix from each option to leave just the date/variable part
         item.options = item.options.map(opt => {
