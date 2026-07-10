@@ -2,7 +2,7 @@
 import { supabase } from "../utils/supabase.js";
 import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
-const BASE_LIQUIDITY = 10000;
+const BASE_LIQUIDITY = 100;
 
 // Top economies matching World Bank seeder
 const COUNTRIES = [

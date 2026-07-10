@@ -5,7 +5,7 @@ import { supabase } from "../utils/supabase.js";
 import { GoogleGenAI } from "@google/genai";
 import { getImageForQuestion, IMAGES } from "../utils/imageHelper.js";
 
-const BASE_LIQUIDITY = 10000;
+const BASE_LIQUIDITY = 100;
 
 async function seedGeminiTrendingMarkets() {
   console.log("🚀 [Cron] Starting Gemini Trending Market Seeder...");

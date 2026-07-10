@@ -19,7 +19,7 @@ import { seedNasaMarkets } from "./nasaSeeder.js";
 import { resolveExpiredMarkets } from "./marketResolver.js";
 
 // Base Liquidity to inject into each auto-created market
-const BASE_LIQUIDITY = 10000; 
+const BASE_LIQUIDITY = 100; 
 
 async function seedFootballMarkets() {
   console.log("⚽ [Cron] Starting Football Market Seeder...");

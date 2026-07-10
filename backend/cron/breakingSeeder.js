@@ -32,7 +32,8 @@ export async function seedBreakingMarkets() {
 Read them and generate the top 2 most interesting prediction market topics that will resolve in the near future.
 For each topic, you must generate exactly 2 resolution dates (e.g. "By Friday", "By End of Month", or "By Oct 2026", "By Dec 2026").
 Prefix the title exactly with "[GROUP:breaking-" followed by a COMPLETE SENTENCE QUESTION asking what will happen, ending with a closing bracket "] ".
-Example Title: "[GROUP:breaking-Will the Supreme Court grant bail to the Chief Minister?] "
+IMPORTANT: DO NOT start every question with the word "Will". Vary your phrasing! Use different structures like "Is the government planning to...", "Could the Supreme Court...", "What are the chances that...", "Is a ban imminent for...", etc.
+Example Title: "[GROUP:breaking-Is the Supreme Court likely to grant bail to the Chief Minister?] "
 The description should give brief context about why this is breaking news.
 Also provide a short image_keyword (1-2 words) for each topic that represents it visually (e.g. "parliament", "bitcoin", "temple", "court").
 Respond ONLY with a valid JSON array. No markdown, no introductory text.
@@ -43,7 +44,7 @@ ${newsSummary}
 Format exactly like this:
 [
   {
-    "title": "[GROUP:breaking-Will the Supreme Court grant bail to the Chief Minister?] ",
+    "title": "[GROUP:breaking-Is the Supreme Court likely to grant bail to the Chief Minister?] ",
     "description": "Context about the breaking news...",
     "image_keyword": "supreme court",
     "options": [
@@ -107,8 +108,10 @@ Format exactly like this:
             ? `https://source.unsplash.com/400x200/?${encodeURIComponent(group.image_keyword)}`
             : `https://source.unsplash.com/400x200/?breaking+news+india`,
           status: 'Active',
-          house_yes_points: 0,
-          house_no_points: 0,
+          house_yes_points: 50,
+          house_no_points: 50,
+          
+          
           created_at: new Date().toISOString()
         });
 
