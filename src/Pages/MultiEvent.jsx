@@ -277,7 +277,7 @@ export default function MultiEvent() {
                 >
                   <div className="flex items-center gap-3 sm:gap-4 flex-1">
                     <span className="text-slate-500 font-mono text-sm w-4 shrink-0">{index + 1}</span>
-                    <img src={market.image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(market.name.match(/\(([^)]+)\)/) ? market.name.match(/\(([^)]+)\)/)[1] : market.name)}&background=random`} alt={market.name} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#2a2e33] shrink-0" />
+                    <img src={market.image_url || ((event_id && event_id.toLowerCase().includes('election')) ? 'https://upload.wikimedia.org/wikipedia/en/thumb/4/41/Flag_of_India.svg/512px-Flag_of_India.svg.png' : `https://ui-avatars.com/api/?name=${encodeURIComponent(market.name)}&background=random`)} alt={market.name} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-[#2a2e33] shrink-0 object-cover" />
                     <div>
                       <div className="font-bold text-white text-base sm:text-lg leading-tight">{market.name}</div>
                       <div className="text-xs text-gray-500 mt-0.5">{market.totalVotes} votes cast</div>
