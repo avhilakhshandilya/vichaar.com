@@ -10,6 +10,7 @@ import { seedWikipediaMarkets } from "./wikipediaSeeder.js";
 import { seedSpaceMarkets } from "./spaceSeeder.js";
 import { seedWeatherMarkets } from "./weatherSeeder.js";
 import { seedIndiaGovMarkets } from "./indiaGovSeeder.js";
+import { seedBreakingMarkets } from "./breakingSeeder.js";
 import { updateMarketOdds } from "./aiOddsUpdater.js";
 import { seedGeminiTrendingMarkets } from "./geminiTrendingSeeder.js";
 import { seedNasaMarkets } from "./nasaSeeder.js";
@@ -157,6 +158,7 @@ async function seedAllMarkets() {
   await seedWeatherMarkets();
   await seedEconomicsMarkets(); // World Bank API
   await seedIMFMarkets(); // IMF API
+  await seedBreakingMarkets(); // Perplexity Sonar
   await seedDataGovMarkets(); // Data.gov.in API
 }
 
