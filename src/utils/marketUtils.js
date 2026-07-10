@@ -39,44 +39,37 @@ export const groupMarkets = (markets) => {
   
   result.forEach(item => {
     if (item.isGroup && item.options.length > 0) {
-      // Find the common prefix among all option names in the group
-      let commonPrefix = item.options[0].optionName;
-      for (let i = 1; i < item.options.length; i++) {
-        let j = 0;
-        while (
-          j < commonPrefix.length && 
-          j < item.options[i].optionName.length && 
-          commonPrefix[j] === item.options[i].optionName[j]
-        ) {
-          j++;
-        }
-        commonPrefix = commonPrefix.substring(0, j);
-      }
+      // A robust way to extract Title and Options is splitting by `?`
+      // since all market questions are formatted as "Question? Option Date"
+      const sampleOption = item.options[0].optionName;
+      const qMarkIndex = sampleOption.lastIndexOf('?');
       
-      // If a meaningful common prefix exists (more than 10 chars), use it as the title
-      if (commonPrefix.length > 10) {
-        // Clean up trailing spaces or punctuation from the title
-        let cleanedTitle = commonPrefix.replace(/(\s+by\s*|\s*by\s*$|\s+at\s*$|[\s]+$)/i, '').trim();
-        if (cleanedTitle.endsWith('?')) {
-           // It already has a question mark
-           item.title = cleanedTitle;
-        } else {
-           // Strip any trailing non-word chars and add the question mark
-           item.title = cleanedTitle.replace(/[\s?]+$/, '') + '?';
-        }
+      if (qMarkIndex !== -1 && qMarkIndex < sampleOption.length - 1) {
+        // The title is everything up to and including the last '?' before options
+        item.title = sampleOption.substring(0, qMarkIndex + 1).trim();
         
-        // Strip the common prefix from each option to leave just the date/variable part
+        // The option name is everything after the '?'
         item.options = item.options.map(opt => {
-          let shortName = opt.optionName.substring(commonPrefix.length).trim();
-          if (shortName.endsWith('?')) shortName = shortName.slice(0, -1);
-          // Capitalize first letter of shortName
+          // If this option also has a ?, split there, else fallback to full string
+          const optQMark = opt.optionName.lastIndexOf('?');
+          let shortName = opt.optionName;
+          if (optQMark !== -1 && optQMark < opt.optionName.length - 1) {
+             shortName = opt.optionName.substring(optQMark + 1).trim();
+          }
+          
+          // Optionally strip leading "By " if we just want the date
+          if (shortName.toLowerCase().startsWith('by ')) {
+             shortName = shortName.substring(3).trim();
+          }
+          
+          // Capitalize first letter
           if (shortName.length > 0) {
             shortName = shortName.charAt(0).toUpperCase() + shortName.slice(1);
           }
           return { ...opt, name: shortName || opt.optionName };
         });
       } else {
-        // Fallback: just use optionName as name if no common prefix
+        // Fallback: just use optionName as name if no question mark separator
         item.options = item.options.map(opt => ({ ...opt, name: opt.optionName }));
       }
 
