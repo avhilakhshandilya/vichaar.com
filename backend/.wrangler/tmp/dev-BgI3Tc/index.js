@@ -87814,10 +87814,15 @@ You are a prediction market creator. Read the following Wikipedia introduction f
 Generate a list of ALL major competing political parties or political alliances (up to 10 parties) (e.g. BJP, INC, DMK, AIADMK, MVA, NDA, AAP, SP, BSP, etc.) likely to contest or win this election, plus a mandatory "Independent / Other" option.
 IMPORTANT: The Wikipedia text above might be very brief. Please use your own vast knowledge of Indian state politics to include ALL other prominent regional and national parties that are active in this specific state, up to a maximum of 10 parties.
 
-For each party/alliance, assign starting YES and NO points that sum exactly to 50 (e.g. yes: 10, no: 40) based on their relative strength or popularity described in the text or previous results:
-- If a party is the current ruling party or strong favorite, set it higher (e.g. yes: 25, no: 25).
-- If it is the major opposition party, set it mid-low (e.g. yes: 10, no: 40).
-- If it is a smaller party, set it very low (e.g. yes: 1, no: 49 or yes: 0, no: 50).
+For each party/alliance, assign starting YES and NO points based on their relative strength.
+CRITICAL MATH RULE: The sum of ALL 'yes' points across ALL options in the array MUST equal EXACTLY 50! This ensures the implied probabilities sum to exactly 100%.
+For each individual option, 'no' MUST equal exactly (50 - yes).
+Example valid distribution for 4 parties:
+- Party A: yes: 25, no: 25 (50% chance)
+- Party B: yes: 15, no: 35 (30% chance)
+- Party C: yes: 9, no: 41 (18% chance)
+- Independent: yes: 1, no: 49 (2% chance)
+Sum of yes points = 25+15+9+1 = 50.
 
 Generate a unique group identifier (e.g. "elections-TamilNadu2026") and the main question title (e.g. "Which party or alliance will win the Tamil Nadu Legislative Assembly election?").
 Also estimate the election date based on the text. Default to the end of the expected election month or year (e.g. "2026-05-31T23:59:59Z").
@@ -88070,8 +88075,8 @@ async function seedDataGovMarkets() {
         ) || aqiData.records.find(
           (r) => r.city && r.city.toLowerCase() === city.toLowerCase()
         );
-        if (record && record.pollutant_max) {
-          const currentAqiMax = parseInt(record.pollutant_max, 10);
+        if (record && record.max_value) {
+          const currentAqiMax = parseInt(record.max_value, 10);
           if (isNaN(currentAqiMax)) continue;
           const threshold = Math.ceil(currentAqiMax * 1.2 / 10) * 10;
           const today = /* @__PURE__ */ new Date();
