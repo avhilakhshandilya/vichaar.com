@@ -43,8 +43,8 @@ export async function seedDataGovMarkets() {
           r.city && r.city.toLowerCase() === city.toLowerCase()
         );
 
-        if (record && record.pollutant_max) {
-          const currentAqiMax = parseInt(record.pollutant_max, 10);
+        if (record && record.max_value) {
+          const currentAqiMax = parseInt(record.max_value, 10);
           if (isNaN(currentAqiMax)) continue;
 
           // Create a market threshold: current max + 20%
